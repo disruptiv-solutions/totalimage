@@ -6,7 +6,7 @@ import { createCheckoutSession } from '../lib/stripe';
 const plan = {
   name: 'Basic',
   price: '$9.99',
-  priceId: 'price_1QpZmpPKbtfyhoovNMX4C3C8',
+  priceId: 'price_1QpssaPNFjVZijl9NDZ1zznm',
   features: [
     'Access to all basic features',
     'Email support',
