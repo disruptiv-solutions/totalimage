@@ -1,4 +1,5 @@
-import * as admin from 'firebase-admin';
+
+const admin = require('firebase-admin');
 
 // Initialize Firebase Admin with your service account
 const app = admin.initializeApp({
@@ -9,7 +10,7 @@ const app = admin.initializeApp({
   })
 });
 
-async function setUserAsAdmin(uid: string) {
+async function setUserAsAdmin(uid) {
   try {
     const db = admin.firestore();
     await db.collection('users').doc(uid).update({
