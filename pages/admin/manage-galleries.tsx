@@ -1,5 +1,4 @@
 import { useState, useEffect, FormEvent } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import ProtectedRoute from '../../components/ProtectedRoute';
@@ -83,7 +82,7 @@ const ManageGalleries: React.FC = () => {
 
   useEffect(() => {
     fetchGalleries();
-  }, [fetchGalleries]);
+  }, []);
 
   const fetchGalleries = async () => {
     try {
@@ -642,11 +641,9 @@ const ManageGalleries: React.FC = () => {
                               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
                                 {set.images.map((image) => (
                                   <div key={image.id} className="relative group">
-                                    <Image
+                                    <img
                                       src={image.url}
                                       alt={image.name}
-                                      width={96}
-                                      height={96}
                                       className="w-full h-24 object-cover rounded-lg"
                                     />
                                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg space-y-2">

@@ -41,31 +41,46 @@ const GalleryDetailPage: React.FC = () => {
 
       try {
         setLoading(true);
+
+        // Get the gallery document
         const galleryRef = doc(db, 'users', adminUid, 'galleries', galleryId as string);
         const gallerySnap = await getDoc(galleryRef);
-
         if (!gallerySnap.exists()) {
           setError('Gallery not found');
           return;
         }
-
         const galleryData = gallerySnap.data();
 
+        // Get all sets in the gallery
         const setsRef = collection(db, 'users', adminUid, 'galleries', galleryId as string, 'sets');
         const setsQuery = query(setsRef, orderBy('createdAt', 'desc'));
         const setsSnap = await getDocs(setsQuery);
 
-        const sets = setsSnap.docs.map(setDoc => {
-          const setData = setDoc.data();
-          return {
-            id: setDoc.id,
-            name: setData.name,
-            imageCount: setData.imageCount || 0,
-            createdAt: setData.createdAt?.toDate() || new Date(),
-            coverPhoto: setData.coverPhoto,
-            createdBy: setData.createdBy,
-          };
-        });
+        // For each set, query the images subcollection to count images.
+        const sets: SetData[] = await Promise.all(
+          setsSnap.docs.map(async (setDoc) => {
+            const setData = setDoc.data();
+            const imagesRef = collection(
+              db,
+              'users',
+              adminUid,
+              'galleries',
+              galleryId as string,
+              'sets',
+              setDoc.id,
+              'images'
+            );
+            const imagesSnap = await getDocs(imagesRef);
+            return {
+              id: setDoc.id,
+              name: setData.name,
+              imageCount: imagesSnap.size,
+              createdAt: setData.createdAt?.toDate() || new Date(),
+              coverPhoto: setData.coverPhoto,
+              createdBy: setData.createdBy,
+            };
+          })
+        );
 
         setGallery({
           id: galleryId as string,
@@ -85,13 +100,12 @@ const GalleryDetailPage: React.FC = () => {
     fetchGallery();
   }, [galleryId, adminUid]);
 
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('en-US', {
+  const formatDate = (date: Date) =>
+    new Intl.DateTimeFormat('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
     }).format(date);
-  };
 
   if (loading) {
     return (
@@ -126,9 +140,7 @@ const GalleryDetailPage: React.FC = () => {
         <div className="mb-8 flex justify-between items-center">
           <div>
             <h1 className="text-4xl font-black tracking-tighter text-white mb-2">{gallery.name}</h1>
-            <div className="text-neutral-400 text-lg">
-              {gallery.setCount} sets
-            </div>
+            <div className="text-neutral-400 text-lg">{gallery.setCount} sets</div>
           </div>
           <Link
             href="/galleries"

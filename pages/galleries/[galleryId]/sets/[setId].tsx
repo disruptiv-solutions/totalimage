@@ -2,8 +2,21 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { db } from '../../../../lib/firebase';
-import { doc, getDoc, collection, getDocs, query, orderBy } from 'firebase/firestore';
-import { Camera, ArrowLeft, Calendar, Grid, Image as ImageIcon } from 'lucide-react';
+import {
+  doc,
+  getDoc,
+  collection,
+  query,
+  orderBy,
+  onSnapshot
+} from 'firebase/firestore';
+import {
+  Camera,
+  ArrowLeft,
+  Calendar,
+  Grid,
+  Image as ImageIcon
+} from 'lucide-react';
 
 interface ImageData {
   id: string;
@@ -41,10 +54,14 @@ const SetDetailPage: React.FC = () => {
   }
 
   useEffect(() => {
+    if (!galleryId || !setId) return;
+
+    let unsubscribeImages: (() => void) | null = null;
+
     const fetchSet = async () => {
-      if (!galleryId || !setId) return;
+      setLoading(true);
       try {
-        setLoading(true);
+        // Fetch gallery information
         const galleryRef = doc(db, 'users', adminUid, 'galleries', galleryId as string);
         const gallerySnap = await getDoc(galleryRef);
         if (!gallerySnap.exists()) {
@@ -53,7 +70,16 @@ const SetDetailPage: React.FC = () => {
         }
         const galleryName = gallerySnap.data().name;
 
-        const setRef = doc(db, 'users', adminUid, 'galleries', galleryId as string, 'sets', setId as string);
+        // Fetch set information
+        const setRef = doc(
+          db,
+          'users',
+          adminUid,
+          'galleries',
+          galleryId as string,
+          'sets',
+          setId as string
+        );
         const setSnap = await getDoc(setRef);
         if (!setSnap.exists()) {
           setError('Set not found');
@@ -61,6 +87,17 @@ const SetDetailPage: React.FC = () => {
         }
         const setInfo = setSnap.data();
 
+        // Set initial set data (with an empty images array)
+        setSetData({
+          id: setId as string,
+          name: setInfo.name,
+          imageCount: 0,
+          createdAt: setInfo.createdAt?.toDate() || new Date(),
+          images: [],
+          galleryName,
+        });
+
+        // Listen for real-time updates on the images subcollection
         const imagesRef = collection(
           db,
           'users',
@@ -72,26 +109,19 @@ const SetDetailPage: React.FC = () => {
           'images'
         );
         const imagesQuery = query(imagesRef, orderBy('uploadedAt', 'desc'));
-        const imagesSnap = await getDocs(imagesQuery);
-        const images: ImageData[] = imagesSnap.docs.map(imgDoc => {
-          const data = imgDoc.data();
-          return {
-            id: imgDoc.id,
-            url: data.url,
-            name: data.name,
-            createdAt: data.uploadedAt?.toDate() || new Date(),
-            size: data.size,
-            type: data.type,
-          };
-        });
-
-        setSetData({
-          id: setId as string,
-          name: setInfo.name,
-          imageCount: images.length,
-          createdAt: setInfo.uploadedAt?.toDate() || new Date(),
-          images,
-          galleryName,
+        unsubscribeImages = onSnapshot(imagesQuery, (imagesSnap) => {
+          const images: ImageData[] = imagesSnap.docs.map((imgDoc) => {
+            const data = imgDoc.data();
+            return {
+              id: imgDoc.id,
+              url: data.url,
+              name: data.name,
+              createdAt: data.uploadedAt?.toDate() || new Date(),
+              size: data.size,
+              type: data.type,
+            };
+          });
+          setSetData((prev) => (prev ? { ...prev, images, imageCount: images.length } : null));
         });
       } catch (err) {
         console.error('Error fetching set:', err);
@@ -100,7 +130,14 @@ const SetDetailPage: React.FC = () => {
         setLoading(false);
       }
     };
+
     fetchSet();
+
+    return () => {
+      if (unsubscribeImages) {
+        unsubscribeImages();
+      }
+    };
   }, [galleryId, setId, adminUid]);
 
   useEffect(() => {
@@ -126,12 +163,12 @@ const SetDetailPage: React.FC = () => {
 
   const handlePrevImage = () => {
     if (!setData) return;
-    setSelectedImageIndex(prev => (prev === 0 ? setData.images.length - 1 : prev - 1));
+    setSelectedImageIndex((prev) => (prev === 0 ? setData.images.length - 1 : prev - 1));
   };
 
   const handleNextImage = () => {
     if (!setData) return;
-    setSelectedImageIndex(prev => (prev === setData.images.length - 1 ? 0 : prev + 1));
+    setSelectedImageIndex((prev) => (prev === setData.images.length - 1 ? 0 : prev + 1));
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -151,7 +188,7 @@ const SetDetailPage: React.FC = () => {
     setTouchStartX(null);
   };
 
-  // Loading State
+  // Loading state
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-black">
@@ -161,7 +198,7 @@ const SetDetailPage: React.FC = () => {
     );
   }
 
-  // Error State
+  // Error state
   if (error || !setData) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-black p-4">
@@ -179,7 +216,7 @@ const SetDetailPage: React.FC = () => {
     );
   }
 
-  // Main Content
+  // Main content
   return (
     <div className="min-h-screen bg-black">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -190,8 +227,8 @@ const SetDetailPage: React.FC = () => {
               Galleries
             </Link>
             {' / '}
-            <Link 
-              href={`/galleries/${galleryId}`} 
+            <Link
+              href={`/galleries/${galleryId}`}
               className="hover:text-[#4CAF50] transition-colors duration-200"
             >
               {setData.galleryName}

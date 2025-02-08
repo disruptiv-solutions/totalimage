@@ -4,7 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 
 interface User {
   email: string;
-  role: string;
+  role?: string;
 }
 
 const AdminDashboard: React.FC = () => {

@@ -46,8 +46,7 @@ function Home() {
         <div className="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8 relative">
           <div className="text-center relative z-10">
             <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-white mb-6">
-              Total<span className="text-[#4CAF50]">Toons</span>
-              <span className="text-[#4CAF50]">34</span>
+              Total<span className="text-white">Toons</span><span className="text-[#4CAF50]">34</span>
             </h1>
             <p className="mt-4 text-xl md:text-2xl text-neutral-400 max-w-2xl mx-auto">
               Exclusive access to TotalToons34's premium digital art collection

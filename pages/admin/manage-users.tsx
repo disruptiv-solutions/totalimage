@@ -56,7 +56,7 @@ const ManageUsers: React.FC = () => {
     if (user) {
       fetchUsers();
     }
-  }, [user, fetchUsers]);
+  }, [user, ]);
 
   const fetchUserSubscription = async (userId: string) => {
     try {

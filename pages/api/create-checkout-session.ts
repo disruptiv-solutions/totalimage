@@ -1,3 +1,5 @@
+// api/create-checkout-session.ts
+
 import { NextApiRequest, NextApiResponse } from 'next';
 import Stripe from 'stripe';
 import { adminDb } from '../../lib/firebase-admin';
@@ -6,7 +8,7 @@ if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('STRIPE_SECRET_KEY is not set in environment variables');
 }
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: '2025-01-27.acacia',
 });
 
@@ -14,22 +16,23 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  console.log(`[DEBUG] Received ${req.method} request with body:`, req.body);
+
   if (req.method !== 'POST') {
+    console.error(`[ERROR] Method not allowed: ${req.method}`);
     return res.status(405).json({ message: 'Method not allowed' });
   }
 
   try {
     const { userId, priceId } = req.body;
-
     if (!userId || !priceId) {
-      return res.status(400).json({ 
-        message: 'Missing required parameters' 
-      });
+      console.error(`[ERROR] Missing required parameters. userId: ${userId}, priceId: ${priceId}`);
+      return res.status(400).json({ message: 'Missing required parameters' });
     }
 
-    console.log('Creating checkout session with:', { userId, priceId });
+    console.log(`[DEBUG] Creating checkout session for userId: ${userId} with priceId: ${priceId}`);
 
-    // Get or create customer
+    // Retrieve active subscription if any
     const subscriptionQuery = await adminDb
       .collection('users')
       .doc(userId)
@@ -38,23 +41,28 @@ export default async function handler(
       .limit(1)
       .get();
 
-    let stripeCustomerId;
+    let stripeCustomerId: string | undefined;
     if (!subscriptionQuery.empty) {
       stripeCustomerId = subscriptionQuery.docs[0].data().stripeCustomerId;
+      console.log(`[DEBUG] Active subscription found for userId ${userId}. stripeCustomerId: ${stripeCustomerId}`);
+    } else {
+      console.log(`[DEBUG] No active subscription found for userId: ${userId}`);
     }
 
-    // Create Checkout Session with promotion code support
+    // Log the environment variable for base URL
+    console.log(`[DEBUG] NEXT_PUBLIC_BASE_URL: ${process.env.NEXT_PUBLIC_BASE_URL}`);
+
+    // Build the session configuration.
     const sessionConfig: Stripe.Checkout.SessionCreateParams = {
       mode: 'subscription',
       payment_method_types: ['card'],
-      customer: stripeCustomerId,
       line_items: [
         {
           price: priceId,
           quantity: 1,
         },
       ],
-      allow_promotion_codes: true, // Enable coupon field in checkout
+      allow_promotion_codes: true,
       subscription_data: {
         trial_period_days: 7,
         trial_settings: {
@@ -68,14 +76,24 @@ export default async function handler(
       client_reference_id: userId,
     };
 
+    if (stripeCustomerId) {
+      sessionConfig.customer = stripeCustomerId;
+    } else {
+      console.log(`[DEBUG] No stripeCustomerId available; consider setting customer_email if possible.`);
+    }
+
+    console.debug('[DEBUG] Final checkout session config:', sessionConfig);
+
+    // Create the checkout session
     const session = await stripe.checkout.sessions.create(sessionConfig);
+    console.log(`[DEBUG] Checkout session created successfully with id: ${session.id}`);
 
     return res.status(200).json({ sessionId: session.id });
-  } catch (err: any) {
-    console.error('Error creating checkout session:', err);
-    return res.status(500).json({ 
+  } catch (error: any) {
+    console.error(`[ERROR] Error creating checkout session: ${error.message}\nStack: ${error.stack}`);
+    return res.status(500).json({
       message: 'Error creating checkout session',
-      error: err.message 
+      error: error.message,
     });
   }
 }

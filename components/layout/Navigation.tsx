@@ -30,14 +30,22 @@ export default function Navigation() {
     }
   };
 
+  // Clicking the title will route the user to the index (home) page.
+  const handleTitleClick = () => {
+    router.push('/');
+  };
+
   if (!user) {
     return (
       <nav className="bg-black border-b border-neutral-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-20 items-center">
-            <span className="text-4xl font-black tracking-tighter text-white">
+            <button
+              onClick={handleTitleClick}
+              className="text-4xl font-black tracking-tighter text-white focus:outline-none"
+            >
               TotalToons<span className="text-[#4CAF50]">34</span>
-            </span>
+            </button>
             <div className="hidden md:flex gap-6">
               <button
                 onClick={() => router.push('/signin')}
@@ -97,9 +105,12 @@ export default function Navigation() {
     <nav className="bg-black border-b border-neutral-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-20 items-center">
-          <span className="text-4xl font-black tracking-tighter text-white">
+          <button
+            onClick={handleTitleClick}
+            className="text-4xl font-black tracking-tighter text-white focus:outline-none"
+          >
             TotalToons<span className="text-[#4CAF50]">34</span>
-          </span>
+          </button>
           <div className="hidden md:flex items-center space-x-6">
             <button
               onClick={() => router.push('/')}

@@ -1,0 +1,5 @@
+*.tsx
+*.ts
+node_modules
+.next
+out

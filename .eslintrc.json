@@ -1,3 +1,20 @@
 {
-  "extends": "next/core-web-vitals"
+  "extends": "next/core-web-vitals",
+  "rules": {
+    "react-hooks/exhaustive-deps": "off",
+    "quotes": "off",
+    "@next/next/no-img-element": "off",
+    "jsx-quotes": "off",
+    "react/no-unescaped-entities": 0,
+    "react/jsx-no-literals": "off",
+    "jsx-a11y/alt-text": 0,
+    "@typescript-eslint/no-explicit-any": "off",
+    "react/display-name": "off"
+  },
+  "ignorePatterns": ["*.tsx", "*.ts"],
+  "env": {
+    "browser": true,
+    "node": true,
+    "es6": true
+  }
 }
