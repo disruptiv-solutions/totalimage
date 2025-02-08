@@ -1,7 +1,7 @@
-// subscription-details.tsx
 import { useRouter } from 'next/router';
 import { useAuth } from '../contexts/AuthContext';
 import { useSubscription } from '../contexts/SubscriptionContext';
+import { CreditCard, Calendar, Clock, User, Shield, Settings, Star } from 'lucide-react';
 
 export default function SubscriptionDetails() {
   const router = useRouter();
@@ -10,8 +10,11 @@ export default function SubscriptionDetails() {
 
   if (authLoading || subscriptionLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <div className="w-16 h-16 relative">
+          <div className="absolute inset-0 rounded-full border-4 border-[#4CAF50]/20 animate-pulse"></div>
+          <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-[#4CAF50] animate-spin"></div>
+        </div>
       </div>
     );
   }
@@ -48,67 +51,54 @@ export default function SubscriptionDetails() {
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      active: { bg: 'bg-green-100', text: 'text-green-800', label: 'Active' },
-      trialing: { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Trial' },
-      canceled: { bg: 'bg-red-100', text: 'text-red-800', label: 'Canceled' },
-      incomplete: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Incomplete' },
-      incomplete_expired: { bg: 'bg-red-100', text: 'text-red-800', label: 'Expired' },
-      past_due: { bg: 'bg-orange-100', text: 'text-orange-800', label: 'Past Due' },
-      unpaid: { bg: 'bg-red-100', text: 'text-red-800', label: 'Unpaid' },
+      active: { bg: 'bg-[#4CAF50]/10', text: 'text-[#4CAF50]', label: 'Active' },
+      trialing: { bg: 'bg-blue-500/10', text: 'text-blue-400', label: 'Trial' },
+      canceled: { bg: 'bg-red-500/10', text: 'text-red-400', label: 'Canceled' },
+      incomplete: { bg: 'bg-yellow-500/10', text: 'text-yellow-400', label: 'Incomplete' },
+      incomplete_expired: { bg: 'bg-red-500/10', text: 'text-red-400', label: 'Expired' },
+      past_due: { bg: 'bg-orange-500/10', text: 'text-orange-400', label: 'Past Due' },
+      unpaid: { bg: 'bg-red-500/10', text: 'text-red-400', label: 'Unpaid' },
     };
 
     const config = statusConfig[status as keyof typeof statusConfig] || 
-      { bg: 'bg-gray-100', text: 'text-gray-800', label: status };
+      { bg: 'bg-neutral-500/10', text: 'text-neutral-400', label: status };
 
     return (
-      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${config.bg} ${config.text}`}>
+      <span className={`px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full ${config.bg} ${config.text}`}>
         {config.label}
       </span>
     );
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <nav className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex">
-              <div className="flex-shrink-0 flex items-center">
-                <span className="text-2xl font-bold text-indigo-600">Subscription Details</span>
-              </div>
-            </div>
-            <div className="flex items-center">
-              <button
-                onClick={() => router.push('/dashboard')}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-600 bg-indigo-100 hover:bg-indigo-200"
-              >
-                Back to Dashboard
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="bg-white overflow-hidden shadow rounded-lg divide-y divide-gray-200">
-          <div className="px-4 py-5 sm:px-6">
-            <h3 className="text-lg leading-6 font-medium text-gray-900">
+    <div className="min-h-screen bg-black pt-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-neutral-900 overflow-hidden rounded-2xl border border-neutral-800">
+          <div className="px-6 py-5">
+            <h3 className="text-2xl font-bold text-white flex items-center">
+              <CreditCard className="w-6 h-6 mr-2 text-[#4CAF50]" />
               Subscription Details
             </h3>
           </div>
-          <div className="px-4 py-5 sm:p-6">
-            <dl className="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2">
+          <div className="px-6 py-8 border-t border-neutral-800">
+            <dl className="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-2">
               <div className="sm:col-span-1">
-                <dt className="text-sm font-medium text-gray-500">Email</dt>
-                <dd className="mt-1 text-sm text-gray-900">{user.email}</dd>
+                <dt className="text-sm font-medium text-neutral-400 flex items-center">
+                  <User className="w-4 h-4 mr-2" />
+                  Email
+                </dt>
+                <dd className="mt-1 text-base text-white">{user.email}</dd>
               </div>
               <div className="sm:col-span-1">
-                <dt className="text-sm font-medium text-gray-500">Status</dt>
-                <dd className="mt-1 text-sm text-gray-900">
+                <dt className="text-sm font-medium text-neutral-400 flex items-center">
+                  <Shield className="w-4 h-4 mr-2" />
+                  Status
+                </dt>
+                <dd className="mt-1">
                   {subscription ? (
                     getStatusBadge(subscription.status)
                   ) : (
-                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                    <span className="px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full bg-neutral-500/10 text-neutral-400">
                       No Subscription
                     </span>
                   )}
@@ -117,53 +107,43 @@ export default function SubscriptionDetails() {
               {subscription && (
                 <>
                   <div className="sm:col-span-1">
-                    <dt className="text-sm font-medium text-gray-500">Started On</dt>
-                    <dd className="mt-1 text-sm text-gray-900">
+                    <dt className="text-sm font-medium text-neutral-400 flex items-center">
+                      <Calendar className="w-4 h-4 mr-2" />
+                      Started On
+                    </dt>
+                    <dd className="mt-1 text-base text-white">
                       {subscription.startDate?.toDate().toLocaleDateString()}
                     </dd>
                   </div>
                   <div className="sm:col-span-1">
-                    <dt className="text-sm font-medium text-gray-500">Current Period</dt>
-                    <dd className="mt-1 text-sm text-gray-900">
+                    <dt className="text-sm font-medium text-neutral-400 flex items-center">
+                      <Clock className="w-4 h-4 mr-2" />
+                      Current Period
+                    </dt>
+                    <dd className="mt-1 text-base text-white">
                       {subscription.currentPeriodStart?.toDate().toLocaleDateString()} - {subscription.currentPeriodEnd?.toDate().toLocaleDateString()}
-                    </dd>
-                  </div>
-                  <div className="sm:col-span-1">
-                    <dt className="text-sm font-medium text-gray-500">Last Updated</dt>
-                    <dd className="mt-1 text-sm text-gray-900">
-                      {subscription.updatedAt?.toDate().toLocaleDateString()}
-                    </dd>
-                  </div>
-                  <div className="sm:col-span-1">
-                    <dt className="text-sm font-medium text-gray-500">Subscription ID</dt>
-                    <dd className="mt-1 text-sm text-gray-900">
-                      {subscription.stripeSubscriptionId}
-                    </dd>
-                  </div>
-                  <div className="sm:col-span-1">
-                    <dt className="text-sm font-medium text-gray-500">Customer ID</dt>
-                    <dd className="mt-1 text-sm text-gray-900">
-                      {subscription.stripeCustomerId}
                     </dd>
                   </div>
                 </>
               )}
             </dl>
           </div>
-          <div className="px-4 py-4 sm:px-6">
+          <div className="px-6 py-4 bg-neutral-800/50 flex justify-between items-center">
             {subscription && ['active', 'trialing'].includes(subscription.status) ? (
               <button
                 onClick={handleManageSubscription}
-                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="inline-flex items-center px-6 py-2.5 rounded-lg text-white bg-[#4CAF50] hover:bg-[#45a049] transition-colors duration-200 text-sm font-semibold"
               >
+                <Settings className="w-4 h-4 mr-2" />
                 Manage Subscription
               </button>
             ) : (
               <button
                 onClick={() => router.push('/subscription')}
-                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="inline-flex items-center px-6 py-2.5 rounded-lg text-white bg-[#4CAF50] hover:bg-[#45a049] transition-colors duration-200 text-sm font-semibold"
               >
-                Get Subscription
+                <Shield className="w-4 h-4 mr-2" />
+                Get Premium Access
               </button>
             )}
           </div>
@@ -171,17 +151,15 @@ export default function SubscriptionDetails() {
 
         {subscription && ['active', 'trialing'].includes(subscription.status) && (
           <div className="mt-8">
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="px-4 py-5 sm:p-6">
-                <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-                  Premium Content
+            <div className="bg-neutral-900 overflow-hidden rounded-2xl border border-neutral-800">
+              <div className="px-6 py-8">
+                <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
+                  <Star className="w-5 h-5 text-[#4CAF50] mr-2" />
+                  Premium Access Active
                 </h3>
-                <div className="prose max-w-none">
-                  <p>
-                    Welcome to your premium dashboard! Here you can access all your
-                    premium features and content.
-                  </p>
-                </div>
+                <p className="text-neutral-400">
+                  You have full access to all TotalToons34 galleries and content. New artwork is added weekly.
+                </p>
               </div>
             </div>
           </div>

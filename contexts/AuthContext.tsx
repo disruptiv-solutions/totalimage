@@ -1,5 +1,6 @@
-// contexts/AuthContext.tsx
+//contexts/AuthContext.tsx
 import { createContext, useContext, useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
 import { 
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -8,23 +9,30 @@ import {
   User,
   updateProfile
 } from 'firebase/auth';
-import { auth } from '../lib/firebase';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { db } from '../lib/firebase';
-
-interface AuthContextType {
-  user: User | null;
-  loading: boolean;
-  signup: (email: string, password: string, userData: { firstName: string; lastName: string }) => Promise<User>;
-  login: (email: string, password: string) => Promise<User>;
-  logout: () => Promise<void>;
-  getUserProfile: (userId: string) => Promise<UserProfile | null>;
-}
+import { auth, db } from '../lib/firebase';
 
 interface UserProfile {
   firstName: string;
   lastName: string;
   email: string;
+  isAdmin?: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+interface SignupData {
+  firstName: string;
+  lastName: string;
+}
+
+interface AuthContextType {
+  user: User | null;
+  loading: boolean;
+  signup: (email: string, password: string, userData: SignupData) => Promise<User>;
+  login: (email: string, password: string) => Promise<User>;
+  logout: () => Promise<void>;
+  getUserProfile: (userId: string) => Promise<UserProfile | null>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -42,6 +50,20 @@ export function useAuth() {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
+}
+
+// New hook for protected routes
+export function useProtectedRoute() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/signin');
+    }
+  }, [user, loading, router]);
+
+  return { user, loading };
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -62,46 +84,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    console.log('Setting up auth state listener');
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       console.log('Auth state changed:', user ? `User logged in: ${user.uid}` : 'No user');
       setUser(user);
       setLoading(false);
     });
 
-    return () => {
-      console.log('Cleaning up auth state listener');
-      unsubscribe();
-    };
+    return unsubscribe;
   }, []);
 
   const signup = async (
     email: string, 
     password: string, 
-    userData: { firstName: string; lastName: string }
+    userData: SignupData
   ): Promise<User> => {
     try {
-      console.log('Attempting signup...');
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      console.log('Signup successful:', userCredential.user.uid);
+      const { user } = userCredential;
 
-      // Update the user's display name
       const displayName = `${userData.firstName} ${userData.lastName}`;
-      await updateProfile(userCredential.user, {
-        displayName: displayName
+      await updateProfile(user, {
+        displayName
       });
 
-      // Store additional user data in Firestore
-      await setDoc(doc(db, 'users', userCredential.user.uid), {
+      const timestamp = new Date().toISOString();
+
+      const userProfile: UserProfile = {
         firstName: userData.firstName,
         lastName: userData.lastName,
         email: email,
-        createdAt: new Date().toISOString()
-      });
+        isAdmin: false,
+        createdAt: timestamp,
+        updatedAt: timestamp
+      };
 
-      setUser(userCredential.user);
-      return userCredential.user;
-    } catch (error: any) {
+      await setDoc(doc(db, 'users', user.uid), userProfile);
+
+      setUser(user);
+      return user;
+    } catch (error) {
       console.error('Signup error:', error);
       throw error;
     }
@@ -109,12 +130,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string): Promise<User> => {
     try {
-      console.log('Attempting login...');
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      console.log('Login successful:', userCredential.user.uid);
       setUser(userCredential.user);
       return userCredential.user;
-    } catch (error: any) {
+    } catch (error) {
       console.error('Login error:', error);
       throw error;
     }
@@ -122,9 +141,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
-      console.log('Attempting logout...');
       await signOut(auth);
-      console.log('Logout successful');
       setUser(null);
     } catch (error) {
       console.error('Logout error:', error);

@@ -1,176 +1,248 @@
-// pages/index.tsx
-import { useRouter } from 'next/router';
 import { useAuth } from '../contexts/AuthContext';
-import { useSubscription } from '../contexts/SubscriptionContext';
-import { withSubscription } from '../components/withSubscription';
-import { useState } from 'react';
-import { Menu } from 'lucide-react';
+import Link from 'next/link';
+import { Camera, Star, ImagePlus, Clock, Image, FolderOpen } from 'lucide-react';
+import { useGalleryCounts } from '../hooks/useGalleryCounts';
 
 function Home() {
-  const router = useRouter();
-  const { user, logout, loading: authLoading } = useAuth();
-  const { subscription, loading: subscriptionLoading } = useSubscription();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, loading: authLoading } = useAuth();
+  const galleries = useGalleryCounts();
 
-  // Show loading spinner while checking auth and subscription
-  if (authLoading || (user && subscriptionLoading)) {
+  const totalGalleries = galleries.length;
+  const totalSets = galleries.reduce((acc, gal) => acc + gal.setCount, 0);
+  const totalImages = galleries.reduce(
+    (acc, gal) => acc + gal.sets.reduce((setAcc, set) => setAcc + set.imageCount, 0),
+    0
+  );
+
+  const recentSets = galleries
+    .flatMap(gallery => 
+      gallery.sets.map(set => ({
+        ...set,
+        galleryId: gallery.id,
+        galleryName: gallery.name
+      }))
+    )
+    .sort((a, b) => {
+      const dateA = a.createdAt || new Date();
+      const dateB = b.createdAt || new Date();
+      return dateB.getTime() - dateA.getTime();
+    })
+    .slice(0, 3);
+
+  if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <div className="w-16 h-16 relative">
+          <div className="absolute inset-0 rounded-full border-4 border-[#4CAF50]/20 animate-pulse"></div>
+          <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-[#4CAF50] animate-spin"></div>
+        </div>
       </div>
     );
   }
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-      router.replace('/');
-    } catch (error) {
-      console.error('Failed to log out:', error);
-    }
-  };
-
-  // Not logged in view
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-100">
-        <nav className="bg-white shadow-sm">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between h-16">
-              <div className="flex">
-                <div className="flex-shrink-0 flex items-center">
-                  <span className="text-2xl font-bold text-indigo-600">Your App Name</span>
-                </div>
+      <div className="min-h-screen bg-black">
+        <div className="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8 relative">
+          <div className="text-center relative z-10">
+            <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-white mb-6">
+              Total<span className="text-[#4CAF50]">Toons</span>
+              <span className="text-[#4CAF50]">34</span>
+            </h1>
+            <p className="mt-4 text-xl md:text-2xl text-neutral-400 max-w-2xl mx-auto">
+              Exclusive access to TotalToons34's premium digital art collection
+            </p>
+            <div className="mt-8 flex justify-center gap-4">
+              <Link
+                href="/signup"
+                className="px-8 py-3 bg-[#4CAF50] text-white text-lg font-semibold rounded-full hover:bg-[#45a049] transition-colors duration-200"
+              >
+                Start Free Trial
+              </Link>
+              <Link
+                href="/signin"
+                className="px-8 py-3 bg-neutral-900 text-white text-lg font-semibold rounded-full hover:bg-neutral-800 transition-colors duration-200"
+              >
+                Sign In
+              </Link>
+            </div>
+          </div>
+
+          <div className="mt-24 grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="bg-neutral-900 p-8 rounded-2xl border border-neutral-800 transform hover:-translate-y-1 transition-all duration-200">
+              <div className="w-12 h-12 bg-[#4CAF50]/10 rounded-xl flex items-center justify-center mb-6">
+                <Star className="w-6 h-6 text-[#4CAF50]" />
               </div>
-              <div className="flex items-center space-x-4">
-                <button
-                  onClick={() => router.push('/signin')}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-600 bg-indigo-100 hover:bg-indigo-200"
-                >
-                  Sign In
-                </button>
-                <button
-                  onClick={() => router.push('/signup')}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-                >
-                  Sign Up
-                </button>
+              <h3 className="text-xl font-semibold text-white mb-4">
+                Exclusive Content
+              </h3>
+              <p className="text-neutral-400">
+                Get instant access to TotalToons34's complete collection of premium digital art
+              </p>
+            </div>
+
+            <div className="bg-neutral-900 p-8 rounded-2xl border border-neutral-800 transform hover:-translate-y-1 transition-all duration-200">
+              <div className="w-12 h-12 bg-[#4CAF50]/10 rounded-xl flex items-center justify-center mb-6">
+                <ImagePlus className="w-6 h-6 text-[#4CAF50]" />
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-4">Regular Updates</h3>
+              <p className="text-neutral-400">
+                New artwork added weekly. Be the first to see fresh content
+              </p>
+            </div>
+
+            <div className="bg-neutral-900 p-8 rounded-2xl border border-neutral-800 transform hover:-translate-y-1 transition-all duration-200">
+              <div className="w-12 h-12 bg-[#4CAF50]/10 rounded-xl flex items-center justify-center mb-6">
+                <Clock className="w-6 h-6 text-[#4CAF50]" />
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-4">Early Access</h3>
+              <p className="text-neutral-400">
+                Preview new galleries before they're publicly released
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-24 bg-neutral-900 rounded-3xl border border-neutral-800 p-8 md:p-12">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="text-center">
+                <div className="text-4xl font-black text-[#4CAF50] mb-2">{totalImages}+</div>
+                <div className="text-neutral-400">Artworks</div>
+              </div>
+              <div className="text-center">
+                <div className="text-4xl font-black text-[#4CAF50] mb-2">{totalGalleries}+</div>
+                <div className="text-neutral-400">Galleries</div>
+              </div>
+              <div className="text-center">
+                <div className="text-4xl font-black text-[#4CAF50] mb-2">Weekly</div>
+                <div className="text-neutral-400">Updates</div>
               </div>
             </div>
           </div>
-        </nav>
+        </div>
+      </div>
+    );
+  }
 
-        <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h1 className="text-4xl font-extrabold text-gray-900 sm:text-5xl sm:tracking-tight lg:text-6xl">
-              Welcome to Our Service
+  const displayName = user.email?.split('@')[0] || 'User';
+
+  return (
+    <div className="min-h-screen bg-black">
+      <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+        {/* Welcome Section with Integrated Stats */}
+        <div className="bg-neutral-900 rounded-2xl border border-neutral-800 overflow-hidden">
+          <div className="px-8 py-10">
+            <h1 className="text-3xl md:text-4xl font-black tracking-tighter text-white mb-4">
+              Welcome back
             </h1>
-            <p className="mt-4 text-xl text-gray-500">
-              Sign up to access premium features and content
+            <p className="text-neutral-400 text-lg mb-8">
+              Your personal gallery collection awaits
+            </p>
+
+            {/* Integrated Stats */}
+            <div className="flex flex-wrap gap-8">
+              <div className="flex items-center">
+                <FolderOpen className="w-5 h-5 text-[#4CAF50] mr-2" />
+                <span className="text-lg font-bold text-[#4CAF50] mr-2">{totalGalleries}</span>
+                <span className="text-neutral-400">Galleries</span>
+              </div>
+              <div className="flex items-center">
+                <ImagePlus className="w-5 h-5 text-[#4CAF50] mr-2" />
+                <span className="text-lg font-bold text-[#4CAF50] mr-2">{totalSets}</span>
+                <span className="text-neutral-400">Sets</span>
+              </div>
+              <div className="flex items-center">
+                <Image className="w-5 h-5 text-[#4CAF50] mr-2" />
+                <span className="text-lg font-bold text-[#4CAF50] mr-2">{totalImages}</span>
+                <span className="text-neutral-400">Images</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Recent Sets Section */}
+        <div className="mt-12">
+          <h2 className="text-2xl font-bold text-white mb-6">Recent Updates</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {recentSets.map((set) => (
+              <Link
+                key={set.id}
+                href={`/galleries/${set.galleryId}/sets/${set.id}`}
+                className="group cursor-pointer rounded-xl overflow-hidden border border-neutral-800 bg-neutral-900 hover:border-[#4CAF50]/50 transition-all duration-200 flex flex-col"
+              >
+                <div className="relative w-full pt-[56.25%] overflow-hidden">
+                  {set.coverPhoto && (
+                    <img
+                      src={set.coverPhoto}
+                      alt={set.name}
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
+                    />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                </div>
+                <div className="p-4 flex flex-col justify-between flex-grow">
+                  <div>
+                    <h3 className="text-lg font-semibold text-white mb-1 line-clamp-1">{set.name}</h3>
+                    <p className="text-sm text-neutral-400">{set.imageCount} images</p>
+                  </div>
+                  <div className="mt-2 text-xs text-neutral-500">
+                    From {set.galleryName}
+                  </div>
+                </div>
+              </Link>
+            ))}
+
+            <Link
+              href="/galleries"
+              className="group cursor-pointer rounded-xl overflow-hidden border border-neutral-800 bg-neutral-900 hover:border-[#4CAF50]/50 transition-all duration-200 flex flex-col"
+            >
+              <div className="relative w-full pt-[56.25%] bg-neutral-800/50">
+                <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
+                  <div className="w-16 h-16 bg-[#4CAF50]/10 rounded-full flex items-center justify-center mb-4 group-hover:bg-[#4CAF50]/20 transition-colors duration-200">
+                    <Camera className="w-8 h-8 text-[#4CAF50]" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-white text-center mb-2">Browse All Galleries</h3>
+                  <p className="text-sm text-neutral-400 text-center">
+                    Explore {totalGalleries} galleries with {totalSets} sets
+                  </p>
+                </div>
+              </div>
+            </Link>
+          </div>
+        </div>
+
+        {/* Quick Stats */}
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+          <div className="bg-neutral-900 p-6 rounded-xl border border-neutral-800 hover:border-[#4CAF50]/50 transition-colors duration-200">
+            <div className="flex items-center mb-4">
+              <div className="w-10 h-10 bg-[#4CAF50]/10 rounded-lg flex items-center justify-center">
+                <Image className="w-5 h-5 text-[#4CAF50]" />
+              </div>
+              <h3 className="ml-4 text-lg font-semibold text-white">
+                Collection Overview
+              </h3>
+            </div>
+            <p className="text-neutral-400">
+              Your collection contains {totalGalleries} galleries with {totalSets} sets and {totalImages} images.
             </p>
           </div>
 
-          <div className="mt-20">
-            <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-lg font-medium text-gray-900">Premium Features</h3>
-                <p className="mt-2 text-gray-500">Access exclusive content and features with our premium subscription.</p>
+          <div className="bg-neutral-900 p-6 rounded-xl border border-neutral-800 hover:border-[#4CAF50]/50 transition-colors duration-200">
+            <div className="flex items-center mb-4">
+              <div className="w-10 h-10 bg-[#4CAF50]/10 rounded-lg flex items-center justify-center">
+                <Star className="w-5 h-5 text-[#4CAF50]" />
               </div>
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-lg font-medium text-gray-900">Easy Management</h3>
-                <p className="mt-2 text-gray-500">Manage your subscription and settings from a simple dashboard.</p>
-              </div>
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-lg font-medium text-gray-900">Regular Updates</h3>
-                <p className="mt-2 text-gray-500">Get access to new features and content as we release them.</p>
-              </div>
+              <h3 className="ml-4 text-lg font-semibold text-white">
+                Premium Member
+              </h3>
             </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Get user's profile name if available
-  const displayName = user.displayName || user.email;
-
-  // Dashboard view (logged in)
-  return (
-    <div className="min-h-screen bg-gray-100">
-      <nav className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex">
-              <div className="flex-shrink-0 flex items-center">
-                <span className="text-2xl font-bold text-indigo-600">Dashboard</span>
-              </div>
-            </div>
-            <div className="flex items-center">
-              <div className="relative">
-                <button
-                  onClick={() => setIsMenuOpen(!isMenuOpen)}
-                  className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
-                >
-                  <Menu className="h-6 w-6" />
-                </button>
-
-                {isMenuOpen && (
-                  <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
-                    <div className="px-4 py-2 text-sm text-gray-500">
-                      {displayName}
-                    </div>
-                    <hr className="my-1" />
-                    <button
-                      onClick={() => {
-                        router.push('/subscription-details');
-                        setIsMenuOpen(false);
-                      }}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      Subscription Details
-                      {subscription?.status === 'active' && (
-                        <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          Active
-                        </span>
-                      )}
-                      {subscription?.status === 'trialing' && (
-                        <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          Trial
-                        </span>
-                      )}
-                    </button>
-                    <button
-                      onClick={() => {
-                        handleLogout();
-                        setIsMenuOpen(false);
-                      }}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      Sign out
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-              Welcome to Your Dashboard
-            </h3>
-            <p className="text-gray-700">
-              Welcome back, {displayName}!
+            <p className="text-neutral-400">
+              Full access to all galleries and weekly updates.
             </p>
           </div>
         </div>
       </div>
     </div>
   );
-}
+  }
 
-// Wrap with subscription protection
-export default withSubscription(Home);
+  export default Home;

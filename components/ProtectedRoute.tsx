@@ -1,28 +1,53 @@
+//components/ProtectedRoute.tsx
 import { useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '../contexts/AuthContext';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
+  requireAdmin?: boolean;
+  fallbackPath?: string;
 }
 
-export default function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { user, loading } = useAuth();
+export default function ProtectedRoute({ 
+  children, 
+  requireAdmin = false,
+  fallbackPath = '/signin' 
+}: ProtectedRouteProps) {
+  const { user, loading, getUserProfile } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push('/signin');
+    async function checkAccess() {
+      if (!loading) {
+        if (!user) {
+          router.push(fallbackPath);
+          return;
+        }
+
+        if (requireAdmin) {
+          const profile = await getUserProfile(user.uid);
+          if (!profile?.isAdmin) {
+            router.push('/');
+          }
+        }
+      }
     }
-  }, [user, loading, router]);
+
+    checkAccess();
+  }, [user, loading, router, requireAdmin, fallbackPath, getUserProfile]);
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl">Loading...</div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
       </div>
     );
   }
 
-  return user ? <>{children}</> : null;
+  if (!user) {
+    return null;
+  }
+
+  return <>{children}</>;
 }

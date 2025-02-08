@@ -2,16 +2,20 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '../contexts/AuthContext';
 import { createCheckoutSession } from '../lib/stripe';
+import { Shield, Clock, Camera, Check, Loader, Sparkles, Star } from 'lucide-react';
 
 const plan = {
-  name: 'Basic',
-  price: '$9.99',
-  priceId: 'price_1QpssaPNFjVZijl9NDZ1zznm',
+  name: 'Premium Access',
+  normalPrice: '$9.99',
+  promoPrice: '$2.99',
+  priceId: 'price_1Qq1cWPNFjVZijl9LxefKEv7',
   features: [
-    'Access to all basic features',
-    'Email support',
-    'Up to 1000 requests per month',
-    'Basic analytics'
+    'Full access to all TotalToons34 galleries',
+    'Unlimited high-resolution image downloads',
+    'Early access to new collections',
+    'Priority support',
+    'Ad-free experience',
+    'Download history tracking'
   ],
 };
 
@@ -45,16 +49,11 @@ export default function Subscription() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
-  useEffect(() => {
-    if (!user) {
-      router.push('/signin');
-    }
-  }, [user, router]);
+  const [remainingSpots, setRemainingSpots] = useState(25); // This would normally be fetched from your backend
 
   const handleSubscribe = async () => {
     if (!user || !user.email) {
-      setError('Please sign in first');
+      router.push('/signup');
       return;
     }
 
@@ -62,12 +61,10 @@ export default function Subscription() {
       setLoading(true);
       setError('');
 
-      // First, check if customer exists
       const customerResponse = await fetch(`/api/get-customer?userId=${user.uid}`);
       let customerId;
 
       if (!customerResponse.ok) {
-        // Create new customer if doesn't exist
         console.log('Creating new Stripe customer...');
         customerId = await createStripeCustomer(user.uid, user.email);
       } else {
@@ -75,7 +72,6 @@ export default function Subscription() {
         customerId = customerData.customerId;
       }
 
-      // Create checkout session
       await createCheckoutSession(user.uid, plan.priceId);
     } catch (err: any) {
       console.error('Subscription error:', err);
@@ -85,78 +81,122 @@ export default function Subscription() {
     }
   };
 
-  if (!user) {
-    return null;
-  }
-
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-black">
       <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
         <div className="text-center">
-          <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
-            Subscribe to Our Service
+          <h1 className="text-4xl font-black tracking-tighter text-white mb-2">
+            Total<span className="text-[#4CAF50]">Toons</span>
+            <span className="text-[#4CAF50]">34</span>
+          </h1>
+          <h2 className="text-3xl font-bold text-white mt-8">
+            Unlock Premium Access
           </h2>
-          <p className="mt-4 text-lg text-gray-600">
-            Get started with our comprehensive basic plan
+          <p className="mt-4 text-xl text-neutral-400">
+            Join our exclusive community of digital art enthusiasts
           </p>
+        </div>
+
+        {/* Special Offer Banner */}
+        <div className="mt-8 max-w-2xl mx-auto">
+          <div className="bg-[#4CAF50]/10 border border-[#4CAF50]/20 rounded-xl p-6 text-center">
+            <div className="flex justify-center mb-4">
+              <Sparkles className="h-8 w-8 text-[#4CAF50]" />
+            </div>
+            <h3 className="text-xl font-semibold text-white mb-2">
+              Limited Time Launch Offer!
+            </h3>
+            <p className="text-neutral-300">
+              First <span className="text-[#4CAF50] font-bold">{remainingSpots}</span> subscribers get a special rate of just{' '}
+              <span className="text-[#4CAF50] font-bold">{plan.promoPrice}/month</span> forever!
+            </p>
+          </div>
         </div>
 
         {error && (
           <div className="mt-8 max-w-md mx-auto">
-            <div className="rounded-md bg-red-50 p-4">
-              <div className="text-sm text-red-700">{error}</div>
+            <div className="rounded-lg bg-red-500/10 border border-red-500/20 p-4">
+              <div className="text-sm text-red-400">{error}</div>
             </div>
           </div>
         )}
 
         <div className="mt-12 max-w-lg mx-auto">
-          <div className="border border-gray-200 rounded-lg shadow-sm divide-y divide-gray-200 bg-white">
-            <div className="p-6">
-              <h3 className="text-2xl font-semibold text-gray-900">{plan.name}</h3>
-              <p className="mt-4 text-sm text-gray-500">
-                Everything you need to get started
-              </p>
-              <p className="mt-8">
-                <span className="text-4xl font-extrabold text-gray-900">
-                  {plan.price}
-                </span>
-                <span className="text-base font-medium text-gray-500">
-                  /month
-                </span>
-              </p>
+          <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden">
+            {/* Trial Period Banner */}
+            <div className="bg-neutral-800 p-4 flex items-center justify-center space-x-2">
+              <Clock className="h-5 w-5 text-[#4CAF50]" />
+              <span className="text-white">Start with a 7-day free trial</span>
+            </div>
+
+            <div className="p-8">
+              <div className="flex items-center justify-between">
+                <h3 className="text-2xl font-bold text-white">{plan.name}</h3>
+                <div className="flex items-center">
+                  <span className="text-neutral-500 line-through mr-2">{plan.normalPrice}</span>
+                  <span className="text-3xl font-bold text-[#4CAF50]">{plan.promoPrice}</span>
+                  <span className="text-neutral-400 ml-1">/month</span>
+                </div>
+              </div>
+
               <button
                 onClick={handleSubscribe}
                 disabled={loading}
-                className="mt-8 block w-full bg-indigo-600 border border-transparent rounded-md py-3 text-sm font-semibold text-white text-center hover:bg-indigo-700 disabled:opacity-50"
+                className="mt-8 w-full bg-[#4CAF50] text-white text-lg font-semibold px-8 py-3 rounded-lg hover:bg-[#45a049] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center"
               >
-                {loading ? 'Processing...' : 'Subscribe Now'}
+                {loading ? (
+                  <>
+                    <Loader className="animate-spin -ml-1 mr-2 h-5 w-5" />
+                    Processing...
+                  </>
+                ) : user ? (
+                  <>
+                    <Shield className="mr-2 h-5 w-5" />
+                    Start Free Trial
+                  </>
+                ) : (
+                  'Create Account to Subscribe'
+                )}
               </button>
+
+              {!user && (
+                <div className="mt-4 flex justify-center space-x-4 text-sm">
+                  <button
+                    onClick={() => router.push('/signup')}
+                    className="text-[#4CAF50] hover:text-[#45a049] font-medium"
+                  >
+                    Create account
+                  </button>
+                  <span className="text-neutral-500">or</span>
+                  <button
+                    onClick={() => router.push('/signin')}
+                    className="text-[#4CAF50] hover:text-[#45a049] font-medium"
+                  >
+                    Sign in
+                  </button>
+                </div>
+              )}
             </div>
-            <div className="pt-6 pb-8 px-6">
-              <h4 className="text-sm font-medium text-gray-900 tracking-wide mb-4">
-                What's included
+
+            <div className="border-t border-neutral-800 p-8">
+              <h4 className="text-lg font-semibold text-white mb-6 flex items-center">
+                <Star className="h-5 w-5 text-[#4CAF50] mr-2" />
+                Premium Features
               </h4>
               <ul className="space-y-4">
                 {plan.features.map((feature) => (
                   <li key={feature} className="flex items-start">
-                    <svg
-                      className="flex-shrink-0 h-5 w-5 text-green-500 mt-0.5"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    <span className="ml-3 text-sm text-gray-500">{feature}</span>
+                    <Check className="h-5 w-5 text-[#4CAF50] mt-0.5 flex-shrink-0" />
+                    <span className="ml-3 text-neutral-300">{feature}</span>
                   </li>
                 ))}
               </ul>
             </div>
           </div>
+
+          <p className="mt-6 text-center text-sm text-neutral-500">
+            Cancel anytime. No commitments.
+          </p>
         </div>
       </div>
     </div>

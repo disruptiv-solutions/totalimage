@@ -43,8 +43,8 @@ export default async function handler(
       stripeCustomerId = subscriptionQuery.docs[0].data().stripeCustomerId;
     }
 
-    // Create Checkout Session
-    const session = await stripe.checkout.sessions.create({
+    // Create Checkout Session with promotion code support
+    const sessionConfig: Stripe.Checkout.SessionCreateParams = {
       mode: 'subscription',
       payment_method_types: ['card'],
       customer: stripeCustomerId,
@@ -54,6 +54,7 @@ export default async function handler(
           quantity: 1,
         },
       ],
+      allow_promotion_codes: true, // Enable coupon field in checkout
       subscription_data: {
         trial_period_days: 7,
         trial_settings: {
@@ -62,10 +63,12 @@ export default async function handler(
           },
         },
       },
-      success_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/dashboard?success=true&session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/?success=true&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/subscription?canceled=true`,
       client_reference_id: userId,
-    });
+    };
+
+    const session = await stripe.checkout.sessions.create(sessionConfig);
 
     return res.status(200).json({ sessionId: session.id });
   } catch (err: any) {
