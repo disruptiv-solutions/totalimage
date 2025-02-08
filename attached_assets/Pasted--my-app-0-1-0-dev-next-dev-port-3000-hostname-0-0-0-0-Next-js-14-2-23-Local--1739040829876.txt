@@ -1,0 +1,57 @@
+
+> my-app@0.1.0 dev
+> next dev --port 3000 --hostname 0.0.0.0
+
+  ▲ Next.js 14.2.23
+  - Local:        http://localhost:3000
+  - Network:      http://0.0.0.0:3000
+
+ ✓ Starting...
+ ✓ Ready in 3s
+ ○ Compiling / ...
+ ✓ Compiled / in 2.1s (404 modules)
+ ✓ Compiled in 224ms (404 modules)
+ReferenceError: useEffect is not defined
+    at MyApp (webpack-internal:///./pages/_app.tsx:30:5)
+    at renderWithHooks (/home/runner/workspace/node_modules/react-dom/cjs/react-dom-server.browser.development.js:5658:16)
+    at renderIndeterminateComponent (/home/runner/workspace/node_modules/react-dom/cjs/react-dom-server.browser.development.js:5731:15)
+    at renderElement (/home/runner/workspace/node_modules/react-dom/cjs/react-dom-server.browser.development.js:5946:7)
+    at renderNodeDestructiveImpl (/home/runner/workspace/node_modules/react-dom/cjs/react-dom-server.browser.development.js:6104:11)
+    at renderNodeDestructive (/home/runner/workspace/node_modules/react-dom/cjs/react-dom-server.browser.development.js:6076:14)
+    at renderIndeterminateComponent (/home/runner/workspace/node_modules/react-dom/cjs/react-dom-server.browser.development.js:5785:7)
+    at renderElement (/home/runner/workspace/node_modules/react-dom/cjs/react-dom-server.browser.development.js:5946:7)
+    at renderNodeDestructiveImpl (/home/runner/workspace/node_modules/react-dom/cjs/react-dom-server.browser.development.js:6104:11)
+    at renderNodeDestructive (/home/runner/workspace/node_modules/react-dom/cjs/react-dom-server.browser.development.js:6076:14)
+    at renderNode (/home/runner/workspace/node_modules/react-dom/cjs/react-dom-server.browser.development.js:6259:12)
+    at renderChildrenArray (/home/runner/workspace/node_modules/react-dom/cjs/react-dom-server.browser.development.js:6211:7)
+    at renderNodeDestructiveImpl (/home/runner/workspace/node_modules/react-dom/cjs/react-dom-server.browser.development.js:6141:7)
+    at renderNodeDestructive (/home/runner/workspace/node_modules/react-dom/cjs/react-dom-server.browser.development.js:6076:14)
+    at renderElement (/home/runner/workspace/node_modules/react-dom/cjs/react-dom-server.browser.development.js:5971:9)
+ ⨯ pages/_app.tsx (13:3) @ useEffect
+ ⨯ ReferenceError: useEffect is not defined
+    at MyApp (webpack-internal:///./pages/_app.tsx:30:5)
+    at renderWithHooks (/home/runner/workspace/node_modules/react-dom/cjs/react-dom-server.browser.development.js:5658:16)
+    at renderIndeterminateComponent (/home/runner/workspace/node_modules/react-dom/cjs/react-dom-server.browser.development.js:5731:15)
+    at renderElement (/home/runner/workspace/node_modules/react-dom/cjs/react-dom-server.browser.development.js:5946:7)
+    at renderNodeDestructiveImpl (/home/runner/workspace/node_modules/react-dom/cjs/react-dom-server.browser.development.js:6104:11)
+    at renderNodeDestructive (/home/runner/workspace/node_modules/react-dom/cjs/react-dom-server.browser.development.js:6076:14)
+    at renderIndeterminateComponent (/home/runner/workspace/node_modules/react-dom/cjs/react-dom-server.browser.development.js:5785:7)
+    at renderElement (/home/runner/workspace/node_modules/react-dom/cjs/react-dom-server.browser.development.js:5946:7)
+    at renderNodeDestructiveImpl (/home/runner/workspace/node_modules/react-dom/cjs/react-dom-server.browser.development.js:6104:11)
+    at renderNodeDestructive (/home/runner/workspace/node_modules/react-dom/cjs/react-dom-server.browser.development.js:6076:14)
+    at renderNode (/home/runner/workspace/node_modules/react-dom/cjs/react-dom-server.browser.development.js:6259:12)
+    at renderChildrenArray (/home/runner/workspace/node_modules/react-dom/cjs/react-dom-server.browser.development.js:6211:7)
+    at renderNodeDestructiveImpl (/home/runner/workspace/node_modules/react-dom/cjs/react-dom-server.browser.development.js:6141:7)
+    at renderNodeDestructive (/home/runner/workspace/node_modules/react-dom/cjs/react-dom-server.browser.development.js:6076:14)
+    at renderElement (/home/runner/workspace/node_modules/react-dom/cjs/react-dom-server.browser.development.js:5971:9) {
+  page: '/'
+}
+  11 |   const router = useRouter();
+  12 |
+> 13 |   useEffect(() => {
+     |   ^
+  14 |     const handleRouteChange = (url: string) => {
+  15 |       gtag.pageview(url);
+  16 |     };
+ ✓ Compiled /_error in 64ms (406 modules)
+ GET / 500 in 3092ms
