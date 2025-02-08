@@ -15,11 +15,11 @@ function Home() {
   );
 
   const recentSets = galleries
-    .flatMap(gallery => 
+    .flatMap(gallery =>
       gallery.sets.map(set => ({
         ...set,
         galleryId: gallery.id,
-        galleryName: gallery.name
+        galleryName: gallery.name,
       }))
     )
     .sort((a, b) => {
@@ -73,9 +73,7 @@ function Home() {
               <div className="w-12 h-12 bg-[#4CAF50]/10 rounded-xl flex items-center justify-center mb-6">
                 <Star className="w-6 h-6 text-[#4CAF50]" />
               </div>
-              <h3 className="text-xl font-semibold text-white mb-4">
-                Exclusive Content
-              </h3>
+              <h3 className="text-xl font-semibold text-white mb-4">Exclusive Content</h3>
               <p className="text-neutral-400">
                 Get instant access to TotalToons34's complete collection of premium digital art
               </p>
@@ -174,7 +172,7 @@ function Home() {
                     <img
                       src={set.coverPhoto}
                       alt={set.name}
-                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
+                      className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-200 group-hover:scale-105"
                     />
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
@@ -200,7 +198,9 @@ function Home() {
                   <div className="w-16 h-16 bg-[#4CAF50]/10 rounded-full flex items-center justify-center mb-4 group-hover:bg-[#4CAF50]/20 transition-colors duration-200">
                     <Camera className="w-8 h-8 text-[#4CAF50]" />
                   </div>
-                  <h3 className="text-lg font-semibold text-white text-center mb-2">Browse All Galleries</h3>
+                  <h3 className="text-lg font-semibold text-white text-center mb-2">
+                    Browse All Galleries
+                  </h3>
                   <p className="text-sm text-neutral-400 text-center">
                     Explore {totalGalleries} galleries with {totalSets} sets
                   </p>
@@ -243,6 +243,6 @@ function Home() {
       </div>
     </div>
   );
-  }
+}
 
-  export default Home;
+export default Home;
