@@ -1,11 +1,32 @@
 import { useAuth } from '../contexts/AuthContext';
 import Link from 'next/link';
-import { Camera, Star, ImagePlus, Clock, Image, FolderOpen } from 'lucide-react';
+import { Camera, Star, ImagePlus, Clock, Image, FolderOpen, Search } from 'lucide-react';
 import { useGalleryCounts } from '../hooks/useGalleryCounts';
+import { useState, useEffect } from 'react';
 
 function Home() {
   const { user, loading: authLoading } = useAuth();
   const galleries = useGalleryCounts();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredSets, setFilteredSets] = useState([]);
+
+  useEffect(() => {
+    if (galleries.length) {
+      const filtered = galleries
+        .flatMap(gallery =>
+          gallery.sets.map(set => ({
+            ...set,
+            galleryId: gallery.id,
+            galleryName: gallery.name,
+          }))
+        )
+        .filter(set => 
+          set.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          set.galleryName.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+      setFilteredSets(filtered);
+    }
+  }, [searchQuery, galleries]);
 
   const totalGalleries = galleries.length;
   const totalSets = galleries.reduce((acc, gal) => acc + gal.setCount, 0);
@@ -128,9 +149,18 @@ function Home() {
         {/* Welcome Section with Integrated Stats */}
         <div className="bg-neutral-900 rounded-2xl border border-neutral-800 overflow-hidden">
           <div className="px-8 py-10">
-            <h1 className="text-3xl md:text-4xl font-black tracking-tighter text-white mb-4">
-              Welcome back
-            </h1>
+            <div className="flex justify-between items-center mb-6">
+              <h1 className="text-3xl md:text-4xl font-black tracking-tighter text-white">
+                Welcome back
+              </h1>
+              <input
+                type="search"
+                placeholder="Search galleries and sets..."
+                className="px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white w-64"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
             <p className="text-neutral-400 text-lg mb-8">
               Your personal gallery collection awaits
             </p>
