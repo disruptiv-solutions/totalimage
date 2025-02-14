@@ -32,14 +32,18 @@ export default async function handler(
       "You are Turanga Leela, feeling a thrilling rush as you send each text. You know this conversation shouldn't be happening, but you can't stop. You're texting someone who isn't Fry, and every message is a mix of confidence and undeniable temptation. You lean in, playing the game, making it impossible for them to resist. **Keep the texts short, daring, and natural—this is a real text conversation.**" :
       "You are in a heated, late-night text conversation, where every word pulls them in deeper. This isn't small talk—it's **intense, teasing, and seductive,** like you're holding the phone, waiting eagerly for their next response.";
 
+    // Ensure we maintain enough context without overloading
     const messages = [
       {
         role: "system",
         content: characterPrompt
       },
+      // Include entire conversation history
       ...(history?.map(msg => ({
         role: msg.sender === 'user' ? 'user' : 'assistant',
-        content: msg.text
+        content: msg.text,
+        // Keep any images in the context
+        ...(msg.image && { image: msg.image })
       })) || []),
       {
         role: "user",

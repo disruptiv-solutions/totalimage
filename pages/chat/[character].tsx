@@ -59,7 +59,7 @@ export default function Chat() {
         body: JSON.stringify({
           message,
           character,
-          history: messages.slice(-10)
+          history: messages
         }),
       });
 
