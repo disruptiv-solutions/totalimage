@@ -165,12 +165,14 @@ function Home() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-12">
             <Link href="/chat/Lois" className="group">
               <div className="bg-neutral-900 rounded-xl overflow-hidden border border-neutral-800 hover:border-[#4CAF50]/50 transition-all duration-200">
-                <div className="aspect-w-16 aspect-h-9 bg-neutral-800">
+                <div className="aspect-[3/4] bg-neutral-800">
                   <img
                     src="/loischat.png"
                     alt="Chat with Lois"
                     className="w-full h-full object-cover object-top"
-                    style={{ maxHeight: '225px' }}
+                    style={{
+                      maxHeight: '400px'
+                    }}
                   />
                 </div>
                 <div className="p-4">
@@ -182,12 +184,14 @@ function Home() {
 
             <Link href="/chat/Leela" className="group">
               <div className="bg-neutral-900 rounded-xl overflow-hidden border border-neutral-800 hover:border-[#4CAF50]/50 transition-all duration-200">
-                <div className="aspect-w-16 aspect-h-9 bg-neutral-800">
+                <div className="aspect-[3/4] bg-neutral-800">
                   <img
                     src="/leelachat.png"
                     alt="Chat with Leela"
                     className="w-full h-full object-cover object-top"
-                    style={{ maxHeight: '225px' }}
+                    style={{
+                      maxHeight: '400px'
+                    }}
                   />
                 </div>
                 <div className="p-4">
@@ -197,6 +201,7 @@ function Home() {
               </div>
             </Link>
           </div>
+        
 
           <h2 className="text-2xl font-bold text-white mb-6">Recent Updates</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
