@@ -74,16 +74,18 @@ export default function Chat() {
           <h1 className="text-2xl font-bold text-white">Chat with {character}</h1>
         </div>
         
-        <div className="bg-neutral-900 rounded-xl p-4 h-[60vh] overflow-y-auto mb-4">
-          {messages.map((msg, i) => (
-            <div key={i} className={`mb-4 ${msg.sender === 'user' ? 'text-right' : 'text-left'}`}>
-              <div className={`inline-block p-3 rounded-lg ${
-                msg.sender === 'user' ? 'bg-[#4CAF50] text-white' : 'bg-neutral-800 text-white'
-              }`}>
-                {msg.text}
+        <div className="bg-neutral-900 rounded-xl p-4 h-[60vh] overflow-y-auto mb-4 flex flex-col-reverse">
+          <div className="flex flex-col">
+            {messages.map((msg, i) => (
+              <div key={i} className={`mb-4 ${msg.sender === 'user' ? 'text-right' : 'text-left'}`}>
+                <div className={`inline-block p-3 rounded-lg ${
+                  msg.sender === 'user' ? 'bg-[#4CAF50] text-white' : 'bg-neutral-800 text-white'
+                }`}>
+                  {msg.text}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
         <div className="flex gap-2">
