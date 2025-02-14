@@ -53,20 +53,38 @@ export default async function handler(
       const content = response.choices[0].message.content;
       const shouldSendMultiple = Math.random() < 0.3; // 30% chance of multiple messages
       
+      const characterImages = getCharacterImages(character);
+      const shouldSendImage = characterImages.length > 0 && Math.random() < 0.2; // 20% chance
+      
       if (shouldSendMultiple) {
-        // Split the response into multiple messages
         const messages = content.split(/(?<=[.!?])\s+/);
         const multipleMessages = messages
-          .filter(msg => msg.length > 10) // Only use substantial messages
-          .slice(0, Math.min(messages.length, 3)); // Up to 3 messages
+          .filter(msg => msg.length > 10)
+          .slice(0, Math.min(messages.length, 3));
 
+        const responses = multipleMessages.map(msg => ({ text: msg.trim() }));
+        
+        if (shouldSendImage) {
+          const randomImage = characterImages[Math.floor(Math.random() * characterImages.length)];
+          responses.push({ text: "Here's a picture for you!", image: randomImage });
+        }
+
+        return res.status(200).json({ responses });
+      }
+      
+      const response = { text: content };
+      if (shouldSendImage) {
+        const randomImage = characterImages[Math.floor(Math.random() * characterImages.length)];
         return res.status(200).json({ 
-          responses: multipleMessages.map(msg => ({ text: msg.trim() }))
+          responses: [
+            response,
+            { text: "Here's a picture for you!", image: randomImage }
+          ]
         });
       }
       
       return res.status(200).json({ 
-        responses: [{ text: content }]
+        responses: [response]
       });
     }
     

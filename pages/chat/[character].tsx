@@ -2,12 +2,25 @@ import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 import { Send, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import fs from 'fs';
+import path from 'path';
+
+// Get list of available images for each character
+const getCharacterImages = (character: string): string[] => {
+  const folder = character.toLowerCase() + 'app';
+  const imagePath = path.join(process.cwd(), folder);
+  if (!fs.existsSync(imagePath)) return [];
+  return fs.readdirSync(imagePath)
+    .filter(file => file.endsWith('.png'))
+    .map(file => `/${folder}/${file}`);
+};
+
 
 export default function Chat() {
   const router = useRouter();
   const { character } = router.query;
   const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState<Array<{text: string, sender: string}>>([]);
+  const [messages, setMessages] = useState<Array<{text: string, sender: string, image?: string}>>([]);
   const [isTyping, setIsTyping] = useState(false);
 
   const backgroundImage = character === 'Lois' ? '/loischat.png' : '/leelachat.png';
@@ -60,7 +73,8 @@ export default function Chat() {
           setTimeout(() => {
             setMessages(prev => [...prev, {
               text: data.responses[i].text,
-              sender: 'character'
+              sender: 'character',
+              image: data.responses[i].image // Add image to message object
             }]);
             if (i === data.responses.length - 1) {
               setIsTyping(false);
@@ -113,6 +127,15 @@ export default function Chat() {
                   }`}
                 >
                   {msg.text}
+                  {msg.image && (
+                    <div className="mt-2">
+                      <img 
+                        src={msg.image} 
+                        alt="Character Image"
+                        className="rounded-lg max-w-[250px] md:max-w-[300px] w-full h-auto object-cover"
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
