@@ -10,17 +10,35 @@ export default function Chat() {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Array<{text: string, sender: string}>>([]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!message.trim()) return;
     setMessages([...messages, { text: message, sender: 'user' }]);
     setMessage('');
-    // Simulate response
-    setTimeout(() => {
-      setMessages(prev => [...prev, { 
-        text: `Hey there! This is ${character}. How can I help you today?`, 
-        sender: 'character' 
-      }]);
-    }, 1000);
+    
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message,
+          character
+        }),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        setMessages(prev => [...prev, { 
+          text: data.response, 
+          sender: 'character' 
+        }]);
+      } else {
+        console.error('Chat error:', data.message);
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
   };
 
   return (

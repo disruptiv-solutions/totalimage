@@ -1,0 +1,50 @@
+
+import type { NextApiRequest, NextApiResponse } from 'next';
+import { OpenAI } from 'openai';
+
+const client = new OpenAI({
+  baseURL: "https://fnlsv2v9iz5cbgin.us-east-1.aws.endpoints.huggingface.cloud/v1/",
+  apiKey: process.env.HUGGINGFACE_API_KEY || ''
+});
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ message: 'Method not allowed' });
+  }
+
+  try {
+    const { message, character } = req.body;
+
+    const response = await client.chat.completions.create({
+      model: "openerotica/writing-roleplay-20k-context-nemo-12b-v1.0-gguf",
+      messages: [
+        {
+          role: "system",
+          content: character === 'Lois' ? 
+            "You are Lois Griffin and you're horny as fuck. The person she's talking to isn't Peter." :
+            "You are having a normal conversation"
+        },
+        {
+          role: "user",
+          content: message
+        }
+      ],
+      max_tokens: 1024,
+      temperature: 0.7,
+      top_p: 0.95,
+      stream: false
+    });
+
+    if (response.choices && response.choices.length > 0) {
+      return res.status(200).json({ response: response.choices[0].message.content });
+    }
+    
+    return res.status(500).json({ message: "No response generated" });
+  } catch (error) {
+    console.error('Chat API Error:', error);
+    return res.status(500).json({ message: 'Error processing chat request' });
+  }
+}
