@@ -55,8 +55,8 @@ export default async function handler(
     const characterFolder = character === 'Lois' ? 'loisapp' : 'leelaapp';
     const imageFiles = Array.from({ length: 8 }, (_, i) => 
       character === 'Lois' ? 
-      `ComfyUI_014${i + 09}_.png` : 
-      `ComfyUI_003${i + 08}_.png`
+      `ComfyUI_014${i + 9}_.png` : 
+      `ComfyUI_003${i + 8}_.png`
     );
 
     if (response.choices && response.choices.length > 0) {
