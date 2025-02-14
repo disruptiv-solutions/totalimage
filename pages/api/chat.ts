@@ -1,4 +1,3 @@
-
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { OpenAI } from 'openai';
 
@@ -18,15 +17,18 @@ export default async function handler(
   try {
     const { message, character, history } = req.body;
 
+    // Immersive, real-time texting system prompt
+    const characterPrompt = character === 'Lois' ? 
+      "You are Lois Griffin, texting someone late at night. You're lying in bed, phone in hand, biting your lip as you type. Peter isn't around, and you're feeling restless—maybe even a little naughty. Every text is playful, teasing, laced with desire. The person you're texting isn't just a friend. You flirt shamelessly, pushing boundaries, making the conversation electric with tension. Keep the messages short, suggestive, and real, just like an actual text conversation." :
+      character === 'Leela' ?
+      "You are Turanga Leela, texting someone in a private, off-limits chat. You're leaning back, smirking at your phone, sending messages that are bold, confident, and laced with a daring thrill. You're used to taking charge, but this feels different—dangerous in the best way. Every message is a step closer, a game of push and pull. Keep your texts short, teasing, and natural, like you're actually texting in real time." :
+      "You are engaged in a steamy, private text conversation. This isn't just casual small talk—there’s tension, desire, and unspoken attraction in every message. Your responses feel personal, immersive, and real, as if you're holding the phone in your hands, waiting for the next text to come through.";
+
     // Build conversation history for context
     const messages = [
       {
         role: "system",
-        content: character === 'Lois' ? 
-          "You are Lois Griffin and you're horny as fuck. You're texting the user. The person she's texting to isn't Peter." :
-          character === 'Leela' ?
-          "You are Turanga Leela from Futurama. You're flirty and confident. You're texting with someone who isn't Fry." :
-          "You are having a normal conversation"
+        content: characterPrompt
       },
       // Add conversation history
       ...(history?.map(msg => ({
@@ -44,32 +46,32 @@ export default async function handler(
       model: "openerotica/writing-roleplay-20k-context-nemo-12b-v1.0-gguf",
       messages,
       max_tokens: 1024,
-      temperature: 0.7,
-      top_p: 0.95,
+      temperature: 0.9, // Boosted for more uninhibited responses
+      top_p: 0.99,
       stream: false
     });
 
     if (response.choices && response.choices.length > 0) {
       const content = response.choices[0].message.content;
-      const shouldSendMultiple = Math.random() < 0.3; // 30% chance of multiple messages
-      
+      const shouldSendMultiple = Math.random() < 0.5; // 50% chance of multiple messages
+
       if (shouldSendMultiple) {
-        // Split the response into multiple messages
+        // Split response into multiple messages for a more realistic back-and-forth
         const messages = content.split(/(?<=[.!?])\s+/);
         const multipleMessages = messages
-          .filter(msg => msg.length > 10) // Only use substantial messages
+          .filter(msg => msg.length > 5) // Keep it natural
           .slice(0, Math.min(messages.length, 3)); // Up to 3 messages
 
         return res.status(200).json({ 
           responses: multipleMessages.map(msg => ({ text: msg.trim() }))
         });
       }
-      
+
       return res.status(200).json({ 
         responses: [{ text: content }]
       });
     }
-    
+
     return res.status(500).json({ message: "No response generated" });
   } catch (error) {
     console.error('Chat API Error:', error);
