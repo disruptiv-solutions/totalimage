@@ -55,13 +55,18 @@ export default function Chat() {
 
       const data = await response.json();
       if (response.ok) {
-        setTimeout(() => {
-          setMessages(prev => [...prev, { 
-            text: data.response, 
-            sender: 'character' 
-          }]);
-          setIsTyping(false);
-        }, Math.random() * 2000 + 1000);
+        for (let i = 0; i < data.responses.length; i++) {
+          const delay = (Math.random() * 2000 + 1000) * (i + 1);
+          setTimeout(() => {
+            setMessages(prev => [...prev, {
+              text: data.responses[i].text,
+              sender: 'character'
+            }]);
+            if (i === data.responses.length - 1) {
+              setIsTyping(false);
+            }
+          }, delay);
+        }
       } else {
         console.error('Chat error:', data.message);
         setIsTyping(false);

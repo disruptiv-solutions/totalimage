@@ -50,7 +50,24 @@ export default async function handler(
     });
 
     if (response.choices && response.choices.length > 0) {
-      return res.status(200).json({ response: response.choices[0].message.content });
+      const content = response.choices[0].message.content;
+      const shouldSendMultiple = Math.random() < 0.3; // 30% chance of multiple messages
+      
+      if (shouldSendMultiple) {
+        // Split the response into multiple messages
+        const messages = content.split(/(?<=[.!?])\s+/);
+        const multipleMessages = messages
+          .filter(msg => msg.length > 10) // Only use substantial messages
+          .slice(0, Math.min(messages.length, 3)); // Up to 3 messages
+
+        return res.status(200).json({ 
+          responses: multipleMessages.map(msg => ({ text: msg.trim() }))
+        });
+      }
+      
+      return res.status(200).json({ 
+        responses: [{ text: content }]
+      });
     }
     
     return res.status(500).json({ message: "No response generated" });
