@@ -16,24 +16,33 @@ export default async function handler(
   }
 
   try {
-    const { message, character } = req.body;
+    const { message, character, history } = req.body;
+
+    // Build conversation history for context
+    const messages = [
+      {
+        role: "system",
+        content: character === 'Lois' ? 
+          "You are Lois Griffin and you're horny as fuck. You're texting the user. The person she's texting to isn't Peter." :
+          character === 'Leela' ?
+          "You are Turanga Leela from Futurama. You're flirty and confident. You're texting with someone who isn't Fry." :
+          "You are having a normal conversation"
+      },
+      // Add conversation history
+      ...(history?.map(msg => ({
+        role: msg.sender === 'user' ? 'user' : 'assistant',
+        content: msg.text
+      })) || []),
+      // Add current message
+      {
+        role: "user",
+        content: message
+      }
+    ];
 
     const response = await client.chat.completions.create({
       model: "openerotica/writing-roleplay-20k-context-nemo-12b-v1.0-gguf",
-      messages: [
-        {
-          role: "system",
-          content: character === 'Lois' ? 
-            "You are Lois Griffin and you're horny as fuck. You're texting the user. The person she's texting to isn't Peter." :
-            character === 'Leela' ?
-            "You are Turanga Leela from Futurama. You're flirty and confident. You're texting with someone who isn't Fry." :
-            "You are having a normal conversation"
-        },
-        {
-          role: "user",
-          content: message
-        }
-      ],
+      messages,
       max_tokens: 1024,
       temperature: 0.7,
       top_p: 0.95,

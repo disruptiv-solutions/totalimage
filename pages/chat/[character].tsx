@@ -45,7 +45,8 @@ export default function Chat() {
         },
         body: JSON.stringify({
           message,
-          character
+          character,
+          history: messages.slice(-10) // Send last 10 messages for context
         }),
       });
 
