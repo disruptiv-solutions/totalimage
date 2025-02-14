@@ -2,17 +2,14 @@ import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 import { Send, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
-import fs from 'fs';
-import path from 'path';
-
-// Get list of available images for each character
+// Define available images for each character
 const getCharacterImages = (character: string): string[] => {
-  const folder = character.toLowerCase() + 'app';
-  const imagePath = path.join(process.cwd(), folder);
-  if (!fs.existsSync(imagePath)) return [];
-  return fs.readdirSync(imagePath)
-    .filter(file => file.endsWith('.png'))
-    .map(file => `/${folder}/${file}`);
+  // These would be your images in the public folder
+  const images = {
+    'Lois': Array.from({length: 5}, (_, i) => `/loisapp/lois${i + 1}.png`),
+    'Leela': Array.from({length: 5}, (_, i) => `/leelaapp/leela${i + 1}.png`)
+  };
+  return images[character] || [];
 };
 
 
