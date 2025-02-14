@@ -1,9 +1,14 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { OpenAI } from 'openai';
 
+const apiKey = process.env.HUGGINGFACE_API_KEY;
+if (!apiKey) {
+  throw new Error('HUGGINGFACE_API_KEY is not set in environment variables');
+}
+
 const client = new OpenAI({
   baseURL: "https://fnlsv2v9iz5cbgin.us-east-1.aws.endpoints.huggingface.cloud/v1/",
-  apiKey: process.env.HUGGINGFACE_API_KEY || ''
+  apiKey: apiKey
 });
 
 const getCharacterImages = (character: string): string[] => {
