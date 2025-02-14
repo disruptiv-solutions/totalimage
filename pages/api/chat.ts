@@ -46,25 +46,40 @@ export default async function handler(
       model: "openerotica/writing-roleplay-20k-context-nemo-12b-v1.0-gguf",
       messages,
       max_tokens: 1024,
-      temperature: 0.9, // Boosted for more uninhibited responses
+      temperature: 0.9,
       top_p: 0.99,
       stream: false
     });
+    
+    const shouldSendImage = Math.random() < 0.15; // 15% chance to send an image
+    const characterFolder = character === 'Lois' ? 'loisapp' : 'leelaapp';
+    const imageFiles = Array.from({ length: 8 }, (_, i) => 
+      character === 'Lois' ? 
+      `ComfyUI_014${i + 09}_.png` : 
+      `ComfyUI_003${i + 08}_.png`
+    );
 
     if (response.choices && response.choices.length > 0) {
       const content = response.choices[0].message.content;
       const shouldSendMultiple = Math.random() < 0.5; // 50% chance of multiple messages
 
-      if (shouldSendMultiple) {
-        // Split response into multiple messages for a more realistic back-and-forth
+      if (shouldSendMultiple || shouldSendImage) {
         const messages = content.split(/(?<=[.!?])\s+/);
         const multipleMessages = messages
-          .filter(msg => msg.length > 5) // Keep it natural
-          .slice(0, Math.min(messages.length, 3)); // Up to 3 messages
+          .filter(msg => msg.length > 5)
+          .slice(0, Math.min(messages.length, 3));
 
-        return res.status(200).json({ 
-          responses: multipleMessages.map(msg => ({ text: msg.trim() }))
-        });
+        let responses = multipleMessages.map(msg => ({ text: msg.trim() }));
+        
+        if (shouldSendImage) {
+          const randomImage = imageFiles[Math.floor(Math.random() * imageFiles.length)];
+          responses.push({ 
+            text: "Here's a picture for you...", 
+            image: `/${characterFolder}/${randomImage}` 
+          });
+        }
+
+        return res.status(200).json({ responses });
       }
 
       return res.status(200).json({ 
