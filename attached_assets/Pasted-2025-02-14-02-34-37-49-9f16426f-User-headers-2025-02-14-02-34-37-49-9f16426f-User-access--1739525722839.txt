@@ -1,0 +1,172 @@
+2025-02-14 02:34:37.49
+9f16426f
+User
+headers: {
+2025-02-14 02:34:37.49
+9f16426f
+User
+'access-control-allow-credentials': 'true',
+2025-02-14 02:34:37.49
+9f16426f
+User
+connection: 'keep-alive',
+2025-02-14 02:34:37.49
+9f16426f
+User
+'content-length': '28',
+2025-02-14 02:34:37.49
+9f16426f
+User
+'content-type': 'application/json',
+2025-02-14 02:34:37.49
+9f16426f
+User
+date: 'Fri, 14 Feb 2025 09:34:37 GMT',
+2025-02-14 02:34:37.49
+9f16426f
+User
+vary: 'origin, access-control-request-method, access-control-request-headers',
+2025-02-14 02:34:37.49
+9f16426f
+User
+'x-request-id': '1Z7dQo'
+2025-02-14 02:34:37.49
+9f16426f
+User
+},
+2025-02-14 02:34:37.49
+9f16426f
+User
+request_id: '1Z7dQo',
+2025-02-14 02:34:37.49
+9f16426f
+User
+error: '401 Unauthorized',
+2025-02-14 02:34:37.49
+9f16426f
+User
+code: undefined,
+2025-02-14 02:34:37.49
+9f16426f
+User
+param: undefined,
+2025-02-14 02:34:37.49
+9f16426f
+User
+type: undefined
+2025-02-14 02:34:37.49
+9f16426f
+User
+}
+2025-02-14 02:34:39.21
+9f16426f
+User
+Chat API Error: AuthenticationError: 401 "401 Unauthorized"
+2025-02-14 02:34:39.21
+9f16426f
+User
+at APIError.generate (file:///home/runner/workspace/node_modules/openai/error.mjs:44:20)
+2025-02-14 02:34:39.21
+9f16426f
+User
+at OpenAI.makeStatusError (file:///home/runner/workspace/node_modules/openai/core.mjs:292:25)
+2025-02-14 02:34:39.21
+9f16426f
+User
+at OpenAI.makeRequest (file:///home/runner/workspace/node_modules/openai/core.mjs:336:30)
+2025-02-14 02:34:39.21
+9f16426f
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-02-14 02:34:39.21
+9f16426f
+User
+at async i (/home/runner/workspace/.next/server/pages/api/chat.js:1:2472)
+2025-02-14 02:34:39.21
+9f16426f
+User
+at async K (/home/runner/workspace/node_modules/next/dist/compiled/next-server/pages-api.runtime.prod.js:20:16881)
+2025-02-14 02:34:39.21
+9f16426f
+User
+at async U.render (/home/runner/workspace/node_modules/next/dist/compiled/next-server/pages-api.runtime.prod.js:20:17520)
+2025-02-14 02:34:39.21
+9f16426f
+User
+at async NextNodeServer.runApi (/home/runner/workspace/node_modules/next/dist/server/next-server.js:603:9)
+2025-02-14 02:34:39.21
+9f16426f
+User
+at async NextNodeServer.handleCatchallRenderRequest (/home/runner/workspace/node_modules/next/dist/server/next-server.js:269:37)
+2025-02-14 02:34:39.21
+9f16426f
+User
+at async NextNodeServer.handleRequestImpl (/home/runner/workspace/node_modules/next/dist/server/base-server.js:818:17) {
+2025-02-14 02:34:39.21
+9f16426f
+User
+status: 401,
+2025-02-14 02:34:39.21
+9f16426f
+User
+headers: {
+2025-02-14 02:34:39.21
+9f16426f
+User
+'access-control-allow-credentials': 'true',
+2025-02-14 02:34:39.21
+9f16426f
+User
+connection: 'keep-alive',
+2025-02-14 02:34:39.21
+9f16426f
+User
+'content-length': '28',
+2025-02-14 02:34:39.21
+9f16426f
+User
+'content-type': 'application/json',
+2025-02-14 02:34:39.21
+9f16426f
+User
+date: 'Fri, 14 Feb 2025 09:34:39 GMT',
+2025-02-14 02:34:39.21
+9f16426f
+User
+vary: 'origin, access-control-request-method, access-control-request-headers',
+2025-02-14 02:34:39.21
+9f16426f
+User
+'x-request-id': 'i_zNY7'
+2025-02-14 02:34:39.21
+9f16426f
+User
+},
+2025-02-14 02:34:39.21
+9f16426f
+User
+request_id: 'i_zNY7',
+2025-02-14 02:34:39.21
+9f16426f
+User
+error: '401 Unauthorized',
+2025-02-14 02:34:39.21
+9f16426f
+User
+code: undefined,
+2025-02-14 02:34:39.21
+9f16426f
+User
+param: undefined,
+2025-02-14 02:34:39.21
+9f16426f
+User
+type: undefined
+2025-02-14 02:34:39.21
+9f16426f
+User
+}
+
+Wrap
+
+Colors

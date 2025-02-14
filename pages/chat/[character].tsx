@@ -2,16 +2,14 @@ import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 import { Send, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
-// Define available images for each character
+
 const getCharacterImages = (character: string): string[] => {
-  // These would be your images in the public folder
   const images = {
     'Lois': Array.from({length: 5}, (_, i) => `/loisapp/lois${i + 1}.png`),
     'Leela': Array.from({length: 5}, (_, i) => `/leelaapp/leela${i + 1}.png`)
   };
   return images[character] || [];
 };
-
 
 export default function Chat() {
   const router = useRouter();
@@ -71,7 +69,7 @@ export default function Chat() {
             setMessages(prev => [...prev, {
               text: data.responses[i].text,
               sender: 'character',
-              image: data.responses[i].image // Add image to message object
+              image: data.responses[i].image
             }]);
             if (i === data.responses.length - 1) {
               setIsTyping(false);
@@ -92,16 +90,16 @@ export default function Chat() {
     <div className="min-h-screen bg-black relative">
       {/* Background Image Layer */}
       <div 
-        className="absolute inset-0 bg-cover bg-center opacity-20 blur-md"
+        className="fixed inset-0 bg-cover bg-center opacity-20"
         style={{ 
           backgroundImage: `url(${backgroundImage})`,
           filter: 'blur(8px)',
-          transform: 'scale(1.1)' // Prevents blur from showing edges
+          transform: 'scale(1.1)'
         }}
       />
 
       {/* Content Layer */}
-      <div className="relative z-10 max-w-3xl mx-auto px-4 py-8">
+      <div className="relative z-10 w-full max-w-3xl mx-auto px-4 py-8">
         <div className="flex items-center mb-8">
           <Link href="/" className="mr-4">
             <ArrowLeft className="w-6 h-6 text-white hover:text-[#4CAF50] transition-colors" />
@@ -109,15 +107,15 @@ export default function Chat() {
           <h1 className="text-2xl font-bold text-white">Chat with {character}</h1>
         </div>
 
-        <div className="bg-neutral-900/90 backdrop-blur-sm rounded-xl p-4 h-[60vh] overflow-y-auto mb-4 flex flex-col-reverse border border-neutral-800">
-          <div className="flex flex-col">
+        <div className="bg-neutral-900/90 backdrop-blur-sm rounded-xl p-4 h-[calc(100vh-12rem)] overflow-y-auto mb-4 flex flex-col-reverse border border-neutral-800">
+          <div className="flex flex-col w-full">
             {messages.map((msg, i) => (
               <div 
                 key={i} 
-                className={`mb-4 ${msg.sender === 'user' ? 'text-right' : 'text-left'} animate-fade-in-up`}
+                className={`mb-4 ${msg.sender === 'user' ? 'text-right' : 'text-left'} animate-fade-in-up w-full`}
               >
                 <div 
-                  className={`inline-block p-3 rounded-lg transform transition-all duration-300 ${
+                  className={`inline-block p-3 rounded-lg max-w-[80%] transform transition-all duration-300 ${
                     msg.sender === 'user' 
                       ? 'bg-[#4CAF50] text-white animate-slide-left' 
                       : 'bg-neutral-800/90 backdrop-blur-sm text-white animate-slide-right'
@@ -129,7 +127,7 @@ export default function Chat() {
                       <img 
                         src={msg.image} 
                         alt="Character Image"
-                        className="rounded-lg max-w-[250px] md:max-w-[300px] w-full h-auto object-cover"
+                        className="rounded-lg w-full h-auto object-cover"
                       />
                     </div>
                   )}
@@ -137,7 +135,7 @@ export default function Chat() {
               </div>
             ))}
             {isTyping && (
-              <div className="mb-4 text-left animate-fade-in">
+              <div className="mb-4 text-left animate-fade-in w-full">
                 <div className="inline-block p-3 rounded-lg bg-neutral-800/90 backdrop-blur-sm text-white">
                   <span className="inline-block animate-bounce-dots">...</span>
                 </div>
