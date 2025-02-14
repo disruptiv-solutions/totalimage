@@ -56,7 +56,7 @@ export default function Chat() {
       const data = await response.json();
       if (response.ok) {
         for (let i = 0; i < data.responses.length; i++) {
-          const delay = (Math.random() * 2000 + 1000) * (i + 1);
+          const delay = (Math.random() * 3000 + 2000) * (i + 1);
           setTimeout(() => {
             setMessages(prev => [...prev, {
               text: data.responses[i].text,
