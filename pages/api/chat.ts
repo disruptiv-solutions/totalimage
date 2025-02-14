@@ -59,13 +59,20 @@ export default async function handler(
     }
 
     const content = completion.choices[0].message.content;
-    const shouldSendMultiple = Math.random() < 0.3;
     const characterImages = getCharacterImages(character);
+    const shouldSendMultiple = Math.random() < 0.3;
+    
+    // Check for contextual image triggers in the conversation
+    const contextualImageTriggers = [
+      'look', 'showing', 'wearing', 'dressed', 'outfit', 'selfie', 
+      'picture', 'photo', 'image', 'see me', 'check this out'
+    ];
+    
     const shouldSendImage = characterImages.length > 0 && (
-      message.toLowerCase().includes('picture') || 
-      message.toLowerCase().includes('photo') || 
-      message.toLowerCase().includes('image') ||
-      Math.random() < 0.4  // Increased chance of sending images
+      contextualImageTriggers.some(trigger => 
+        message.toLowerCase().includes(trigger) || 
+        content.toLowerCase().includes(trigger)
+      )
     );
 
     let responses = [];
@@ -82,7 +89,12 @@ export default async function handler(
 
     if (shouldSendImage) {
       const randomImage = characterImages[Math.floor(Math.random() * characterImages.length)];
-      responses.push({ text: "Here's a picture for you!", image: randomImage });
+      // Add image naturally into the conversation
+      if (content.toLowerCase().includes('here')) {
+        responses.splice(1, 0, { image: randomImage });
+      } else {
+        responses.push({ image: randomImage });
+      }
     }
 
     return res.status(200).json({ responses });
