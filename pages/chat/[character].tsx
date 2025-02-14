@@ -1,6 +1,6 @@
 
 import { useRouter } from 'next/router';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Send, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
