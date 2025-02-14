@@ -1,4 +1,3 @@
-
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 import { Send, ArrowLeft } from 'lucide-react';
@@ -9,6 +8,7 @@ export default function Chat() {
   const { character } = router.query;
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Array<{text: string, sender: string}>>([]);
+  const [isTyping, setIsTyping] = useState(false);
 
   useEffect(() => {
     if (character) {
@@ -36,7 +36,8 @@ export default function Chat() {
     if (!message.trim()) return;
     setMessages([...messages, { text: message, sender: 'user' }]);
     setMessage('');
-    
+    setIsTyping(true); // Indicate typing start
+
     try {
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -52,15 +53,20 @@ export default function Chat() {
 
       const data = await response.json();
       if (response.ok) {
-        setMessages(prev => [...prev, { 
-          text: data.response, 
-          sender: 'character' 
-        }]);
+        setTimeout(() => { // Simulate typing delay
+          setMessages(prev => [...prev, { 
+            text: data.response, 
+            sender: 'character' 
+          }]);
+          setIsTyping(false); // Indicate typing end
+        }, Math.random() * 2000 + 1000); // Random delay between 1 and 3 seconds
       } else {
         console.error('Chat error:', data.message);
+        setIsTyping(false);
       }
     } catch (error) {
       console.error('Error sending message:', error);
+      setIsTyping(false);
     }
   };
 
@@ -73,7 +79,7 @@ export default function Chat() {
           </Link>
           <h1 className="text-2xl font-bold text-white">Chat with {character}</h1>
         </div>
-        
+
         <div className="bg-neutral-900 rounded-xl p-4 h-[60vh] overflow-y-auto mb-4 flex flex-col-reverse">
           <div className="flex flex-col">
             {messages.map((msg, i) => (
@@ -85,6 +91,13 @@ export default function Chat() {
                 </div>
               </div>
             ))}
+            {isTyping && (
+              <div className="mb-4 text-left">
+                <div className="inline-block p-3 rounded-lg bg-neutral-800 text-white">
+                  <span className="animate-typing">...</span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
