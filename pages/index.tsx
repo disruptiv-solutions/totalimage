@@ -1,32 +1,11 @@
 import { useAuth } from '../contexts/AuthContext';
 import Link from 'next/link';
-import { Camera, Star, ImagePlus, Clock, Image, FolderOpen, Search } from 'lucide-react';
+import { Camera, Star, ImagePlus, Clock, Image, FolderOpen } from 'lucide-react';
 import { useGalleryCounts } from '../hooks/useGalleryCounts';
-import { useState, useEffect } from 'react';
 
 function Home() {
   const { user, loading: authLoading } = useAuth();
   const galleries = useGalleryCounts();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filteredSets, setFilteredSets] = useState([]);
-
-  useEffect(() => {
-    if (galleries.length) {
-      const filtered = galleries
-        .flatMap(gallery =>
-          gallery.sets.map(set => ({
-            ...set,
-            galleryId: gallery.id,
-            galleryName: gallery.name,
-          }))
-        )
-        .filter(set => 
-          set.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          set.galleryName.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-      setFilteredSets(filtered);
-    }
-  }, [searchQuery, galleries]);
 
   const totalGalleries = galleries.length;
   const totalSets = galleries.reduce((acc, gal) => acc + gal.setCount, 0);
@@ -150,13 +129,12 @@ function Home() {
               <h1 className="text-3xl md:text-4xl font-black tracking-tighter text-white">
                 Welcome back
               </h1>
-              <input
-                type="search"
-                placeholder="Search galleries and sets..."
-                className="px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white w-64"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+              <Link
+                href="/galleries"
+                className="px-6 py-2 bg-[#4CAF50] text-white text-lg font-semibold rounded-lg hover:bg-[#45a049] transition-colors duration-200"
+              >
+                View Galleries
+              </Link>
             </div>
             <p className="text-neutral-400 text-lg mb-8">
               Your personal gallery collection awaits
@@ -189,9 +167,10 @@ function Home() {
               <div className="bg-neutral-900 rounded-xl overflow-hidden border border-neutral-800 hover:border-[#4CAF50]/50 transition-all duration-200">
                 <div className="aspect-w-16 aspect-h-9 bg-neutral-800">
                   <img
-                    src="https://placehold.co/400x225/4CAF50/ffffff?text=Lois"
-                    alt="Lois"
-                    className="w-full h-full object-cover"
+                    src="/loischat.png"
+                    alt="Chat with Lois"
+                    className="w-full h-full object-cover object-top"
+                    style={{ maxHeight: '225px' }}
                   />
                 </div>
                 <div className="p-4">
@@ -200,14 +179,15 @@ function Home() {
                 </div>
               </div>
             </Link>
-            
+
             <Link href="/chat/Leela" className="group">
               <div className="bg-neutral-900 rounded-xl overflow-hidden border border-neutral-800 hover:border-[#4CAF50]/50 transition-all duration-200">
                 <div className="aspect-w-16 aspect-h-9 bg-neutral-800">
                   <img
-                    src="https://placehold.co/400x225/4CAF50/ffffff?text=Leela"
-                    alt="Leela"
-                    className="w-full h-full object-cover"
+                    src="/public/leelachat.png"
+                    alt="Chat with Leela"
+                    className="w-full h-full object-cover object-top"
+                    style={{ maxHeight: '225px' }}
                   />
                 </div>
                 <div className="p-4">
@@ -226,14 +206,10 @@ function Home() {
                 href={`/galleries/${set.galleryId}/sets/${set.id}`}
                 className="group cursor-pointer rounded-xl overflow-hidden border border-neutral-800 bg-neutral-900 hover:border-[#4CAF50]/50 transition-all duration-200 flex flex-col"
               >
-                <div className="relative w-full pt-[56.25%] overflow-hidden">
-                  {set.coverPhoto && (
-                    <img
-                      src={set.coverPhoto}
-                      alt={set.name}
-                      className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-200 group-hover:scale-105"
-                    />
-                  )}
+                <div className="relative w-full pt-[56.25%] bg-neutral-800">
+                  <div className="absolute inset-0 flex items-center justify-center text-white">
+                    {set.name}
+                  </div>
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
                 </div>
                 <div className="p-4 flex flex-col justify-between flex-grow">
@@ -295,12 +271,11 @@ function Home() {
             </div>
             <p className="text-neutral-400">
               Full access to all galleries and weekly updates.
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+            </p></div>
+              </div>
+            </div>
+            </div>
+            );
+            }
 
-export default Home;
+            export default Home;

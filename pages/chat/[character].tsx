@@ -10,6 +10,8 @@ export default function Chat() {
   const [messages, setMessages] = useState<Array<{text: string, sender: string}>>([]);
   const [isTyping, setIsTyping] = useState(false);
 
+  const backgroundImage = character === 'Lois' ? '/loischat.png' : '/leelachat.png';
+
   useEffect(() => {
     if (character) {
       fetch('/api/chat', {
@@ -36,7 +38,7 @@ export default function Chat() {
     if (!message.trim()) return;
     setMessages([...messages, { text: message, sender: 'user' }]);
     setMessage('');
-    setIsTyping(true); // Indicate typing start
+    setIsTyping(true);
 
     try {
       const response = await fetch('/api/chat', {
@@ -47,19 +49,19 @@ export default function Chat() {
         body: JSON.stringify({
           message,
           character,
-          history: messages.slice(-10) // Send last 10 messages for context
+          history: messages.slice(-10)
         }),
       });
 
       const data = await response.json();
       if (response.ok) {
-        setTimeout(() => { // Simulate typing delay
+        setTimeout(() => {
           setMessages(prev => [...prev, { 
             text: data.response, 
             sender: 'character' 
           }]);
-          setIsTyping(false); // Indicate typing end
-        }, Math.random() * 2000 + 1000); // Random delay between 1 and 3 seconds
+          setIsTyping(false);
+        }, Math.random() * 2000 + 1000);
       } else {
         console.error('Chat error:', data.message);
         setIsTyping(false);
@@ -71,16 +73,27 @@ export default function Chat() {
   };
 
   return (
-    <div className="min-h-screen bg-black">
-      <div className="max-w-3xl mx-auto px-4 py-8">
+    <div className="min-h-screen bg-black relative">
+      {/* Background Image Layer */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center opacity-20 blur-md"
+        style={{ 
+          backgroundImage: `url(${backgroundImage})`,
+          filter: 'blur(8px)',
+          transform: 'scale(1.1)' // Prevents blur from showing edges
+        }}
+      />
+
+      {/* Content Layer */}
+      <div className="relative z-10 max-w-3xl mx-auto px-4 py-8">
         <div className="flex items-center mb-8">
           <Link href="/" className="mr-4">
-            <ArrowLeft className="w-6 h-6 text-white" />
+            <ArrowLeft className="w-6 h-6 text-white hover:text-[#4CAF50] transition-colors" />
           </Link>
           <h1 className="text-2xl font-bold text-white">Chat with {character}</h1>
         </div>
 
-        <div className="bg-neutral-900 rounded-xl p-4 h-[60vh] overflow-y-auto mb-4 flex flex-col-reverse">
+        <div className="bg-neutral-900/90 backdrop-blur-sm rounded-xl p-4 h-[60vh] overflow-y-auto mb-4 flex flex-col-reverse border border-neutral-800">
           <div className="flex flex-col">
             {messages.map((msg, i) => (
               <div 
@@ -91,7 +104,7 @@ export default function Chat() {
                   className={`inline-block p-3 rounded-lg transform transition-all duration-300 ${
                     msg.sender === 'user' 
                       ? 'bg-[#4CAF50] text-white animate-slide-left' 
-                      : 'bg-neutral-800 text-white animate-slide-right'
+                      : 'bg-neutral-800/90 backdrop-blur-sm text-white animate-slide-right'
                   }`}
                 >
                   {msg.text}
@@ -100,7 +113,7 @@ export default function Chat() {
             ))}
             {isTyping && (
               <div className="mb-4 text-left animate-fade-in">
-                <div className="inline-block p-3 rounded-lg bg-neutral-800 text-white">
+                <div className="inline-block p-3 rounded-lg bg-neutral-800/90 backdrop-blur-sm text-white">
                   <span className="inline-block animate-bounce-dots">...</span>
                 </div>
               </div>
@@ -115,7 +128,7 @@ export default function Chat() {
             onChange={(e) => setMessage(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSend()}
             placeholder="Type your message..."
-            className="flex-1 bg-neutral-900 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#4CAF50]"
+            className="flex-1 bg-neutral-900/90 backdrop-blur-sm text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#4CAF50] border border-neutral-800"
           />
           <button
             onClick={handleSend}
