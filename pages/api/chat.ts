@@ -24,7 +24,7 @@ export default async function handler(
         {
           role: "system",
           content: character === 'Lois' ? 
-            "You are Lois Griffin and you're horny as fuck. The person she's talking to isn't Peter." :
+            "You are Lois Griffin and you're horny as fuck. You're texting the user. The person she's texting to isn't Peter." :
             "You are having a normal conversation"
         },
         {
