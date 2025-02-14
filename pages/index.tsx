@@ -165,14 +165,12 @@ function Home() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-12">
             <Link href="/chat/Lois" className="group">
               <div className="bg-neutral-900 rounded-xl overflow-hidden border border-neutral-800 hover:border-[#4CAF50]/50 transition-all duration-200">
-                <div className="aspect-[3/4] bg-neutral-800">
+                <div className="aspect-w-16 aspect-h-9 bg-neutral-800">
                   <img
                     src="/loischat.png"
                     alt="Chat with Lois"
                     className="w-full h-full object-cover object-top"
-                    style={{
-                      maxHeight: '400px'
-                    }}
+                    style={{ maxHeight: '225px' }}
                   />
                 </div>
                 <div className="p-4">
@@ -184,14 +182,12 @@ function Home() {
 
             <Link href="/chat/Leela" className="group">
               <div className="bg-neutral-900 rounded-xl overflow-hidden border border-neutral-800 hover:border-[#4CAF50]/50 transition-all duration-200">
-                <div className="aspect-[3/4] bg-neutral-800">
+                <div className="aspect-w-16 aspect-h-9 bg-neutral-800">
                   <img
-                    src="/leelachat.png"
+                    src="/public/leelachat.png"
                     alt="Chat with Leela"
                     className="w-full h-full object-cover object-top"
-                    style={{
-                      maxHeight: '400px'
-                    }}
+                    style={{ maxHeight: '225px' }}
                   />
                 </div>
                 <div className="p-4">
@@ -201,7 +197,6 @@ function Home() {
               </div>
             </Link>
           </div>
-        
 
           <h2 className="text-2xl font-bold text-white mb-6">Recent Updates</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -211,14 +206,10 @@ function Home() {
                 href={`/galleries/${set.galleryId}/sets/${set.id}`}
                 className="group cursor-pointer rounded-xl overflow-hidden border border-neutral-800 bg-neutral-900 hover:border-[#4CAF50]/50 transition-all duration-200 flex flex-col"
               >
-                <div className="relative w-full pt-[56.25%] overflow-hidden">
-                  {set.coverPhoto && (
-                    <img
-                      src={set.coverPhoto}
-                      alt={set.name}
-                      className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-200 group-hover:scale-105"
-                    />
-                  )}
+                <div className="relative w-full pt-[56.25%] bg-neutral-800">
+                  <div className="absolute inset-0 flex items-center justify-center text-white">
+                    {set.name}
+                  </div>
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
                 </div>
                 <div className="p-4 flex flex-col justify-between flex-grow">
@@ -275,16 +266,16 @@ function Home() {
                 <Star className="w-5 h-5 text-[#4CAF50]" />
               </div>
               <h3 className="ml-4 text-lg font-semibold text-white">
-                Premium Member</h3>
-                  </div>
-                  <p className="text-neutral-400">
-                    Full access to all galleries and weekly updates.
-                  </p>
-                </div>
-                </div>
-                </div>
-                </div>
-                );
-                }
+                Premium Member
+              </h3>
+            </div>
+            <p className="text-neutral-400">
+              Full access to all galleries and weekly updates.
+            </p></div>
+              </div>
+            </div>
+            </div>
+            );
+            }
 
-                export default Home;
+            export default Home;

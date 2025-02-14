@@ -113,13 +113,6 @@ export default function Chat() {
                   }`}
                 >
                   {msg.text}
-                  {msg.image && (
-                    <img 
-                      src={msg.image} 
-                      alt="Character image"
-                      className="mt-2 rounded-lg max-w-[300px] w-full object-cover"
-                    />
-                  )}
                 </div>
               </div>
             ))}
