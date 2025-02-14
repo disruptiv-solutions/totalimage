@@ -7,6 +7,14 @@ const client = new OpenAI({
   apiKey: process.env.HUGGINGFACE_API_KEY || ''
 });
 
+const getCharacterImages = (character: string): string[] => {
+  const images = {
+    'Lois': Array.from({length: 5}, (_, i) => `/loisapp/lois${i + 1}.png`),
+    'Leela': Array.from({length: 5}, (_, i) => `/leelaapp/leela${i + 1}.png`)
+  };
+  return images[character as keyof typeof images] || [];
+};
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -18,7 +26,6 @@ export default async function handler(
   try {
     const { message, character, history } = req.body;
 
-    // Build conversation history for context
     const messages = [
       {
         role: "system",
@@ -28,19 +35,17 @@ export default async function handler(
           "You are Turanga Leela from Futurama. You're flirty and confident. You're texting with someone who isn't Fry." :
           "You are having a normal conversation"
       },
-      // Add conversation history
       ...(history?.map(msg => ({
         role: msg.sender === 'user' ? 'user' : 'assistant',
         content: msg.text
       })) || []),
-      // Add current message
       {
         role: "user",
         content: message
       }
     ];
 
-    const response = await client.chat.completions.create({
+    const completion = await client.chat.completions.create({
       model: "openerotica/writing-roleplay-20k-context-nemo-12b-v1.0-gguf",
       messages,
       max_tokens: 1024,
@@ -49,46 +54,34 @@ export default async function handler(
       stream: false
     });
 
-    if (response.choices && response.choices.length > 0) {
-      const content = response.choices[0].message.content;
-      const shouldSendMultiple = Math.random() < 0.3; // 30% chance of multiple messages
-      
-      const characterImages = getCharacterImages(character);
-      const shouldSendImage = characterImages.length > 0 && Math.random() < 0.2; // 20% chance
-      
-      if (shouldSendMultiple) {
-        const messages = content.split(/(?<=[.!?])\s+/);
-        const multipleMessages = messages
-          .filter(msg => msg.length > 10)
-          .slice(0, Math.min(messages.length, 3));
-
-        const responses = multipleMessages.map(msg => ({ text: msg.trim() }));
-        
-        if (shouldSendImage) {
-          const randomImage = characterImages[Math.floor(Math.random() * characterImages.length)];
-          responses.push({ text: "Here's a picture for you!", image: randomImage });
-        }
-
-        return res.status(200).json({ responses });
-      }
-      
-      const response = { text: content };
-      if (shouldSendImage) {
-        const randomImage = characterImages[Math.floor(Math.random() * characterImages.length)];
-        return res.status(200).json({ 
-          responses: [
-            response,
-            { text: "Here's a picture for you!", image: randomImage }
-          ]
-        });
-      }
-      
-      return res.status(200).json({ 
-        responses: [response]
-      });
+    if (!completion.choices || completion.choices.length === 0) {
+      return res.status(500).json({ message: "No response generated" });
     }
+
+    const content = completion.choices[0].message.content;
+    const shouldSendMultiple = Math.random() < 0.3;
+    const characterImages = getCharacterImages(character);
+    const shouldSendImage = characterImages.length > 0 && Math.random() < 0.2;
+
+    let responses = [];
     
-    return res.status(500).json({ message: "No response generated" });
+    if (shouldSendMultiple) {
+      const messages = content.split(/(?<=[.!?])\s+/);
+      responses = messages
+        .filter(msg => msg.length > 10)
+        .slice(0, Math.min(messages.length, 3))
+        .map(msg => ({ text: msg.trim() }));
+    } else {
+      responses = [{ text: content }];
+    }
+
+    if (shouldSendImage) {
+      const randomImage = characterImages[Math.floor(Math.random() * characterImages.length)];
+      responses.push({ text: "Here's a picture for you!", image: randomImage });
+    }
+
+    return res.status(200).json({ responses });
+    
   } catch (error) {
     console.error('Chat API Error:', error);
     return res.status(500).json({ message: 'Error processing chat request' });
