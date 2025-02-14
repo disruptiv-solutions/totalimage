@@ -10,6 +10,28 @@ export default function Chat() {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Array<{text: string, sender: string}>>([]);
 
+  useEffect(() => {
+    if (character) {
+      fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: "Hi there!",
+          character
+        }),
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.response) {
+          setMessages([{ text: data.response, sender: 'character' }]);
+        }
+      })
+      .catch(error => console.error('Error getting initial message:', error));
+    }
+  }, [character]);
+
   const handleSend = async () => {
     if (!message.trim()) return;
     setMessages([...messages, { text: message, sender: 'user' }]);
