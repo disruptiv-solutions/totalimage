@@ -61,7 +61,12 @@ export default async function handler(
     const content = completion.choices[0].message.content;
     const shouldSendMultiple = Math.random() < 0.3;
     const characterImages = getCharacterImages(character);
-    const shouldSendImage = characterImages.length > 0 && Math.random() < 0.2;
+    const shouldSendImage = characterImages.length > 0 && (
+      message.toLowerCase().includes('picture') || 
+      message.toLowerCase().includes('photo') || 
+      message.toLowerCase().includes('image') ||
+      Math.random() < 0.4  // Increased chance of sending images
+    );
 
     let responses = [];
     
