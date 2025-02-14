@@ -9,8 +9,8 @@ const client = new OpenAI({
 
 const getCharacterImages = (character: string): string[] => {
   const images = {
-    'Lois': Array.from({length: 5}, (_, i) => `/loisapp/lois${i + 1}.png`),
-    'Leela': Array.from({length: 5}, (_, i) => `/leelaapp/leela${i + 1}.png`)
+    'Lois': Array.from({length: 10}, (_, i) => `/loisapp1/lois${i + 1}.png`),
+    'Leela': Array.from({length: 10}, (_, i) => `/leelaapp/leela${i + 1}.png`)
   };
   return images[character as keyof typeof images] || [];
 };
