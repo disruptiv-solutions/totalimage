@@ -7,6 +7,7 @@ import * as gtag from '../lib/gtag';
 import { AuthProvider } from '../contexts/AuthContext';
 import { SubscriptionProvider } from '../contexts/SubscriptionContext';
 import Navigation from '../components/layout/Navigation';
+import Footer from '../components/layout/Footer';
 
 function MyApp({ Component, pageProps }: AppProps) {
   const router = useRouter();
@@ -30,7 +31,7 @@ function MyApp({ Component, pageProps }: AppProps) {
     '/reset-password',
     '/404',
     '/500',
-    '/subscription'  // Added subscription page to hidden navigation routes
+    '/subscription'
   ].includes(router.pathname);
 
   return (
@@ -54,11 +55,16 @@ function MyApp({ Component, pageProps }: AppProps) {
         }}
       />
       <AuthProvider>
-      <SubscriptionProvider>
-        {!hideNavigation && <Navigation />}
-        <Component {...pageProps} />
-      </SubscriptionProvider>
-    </AuthProvider>
+        <SubscriptionProvider>
+          <div className="min-h-screen flex flex-col bg-black">
+            {!hideNavigation && <Navigation />}
+            <main className="flex-grow">
+              <Component {...pageProps} />
+            </main>
+            <Footer />
+          </div>
+        </SubscriptionProvider>
+      </AuthProvider>
     </>
   );
 }

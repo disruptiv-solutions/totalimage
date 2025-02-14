@@ -77,7 +77,7 @@ function Home() {
                 href="/signup"
                 className="px-8 py-3 bg-[#4CAF50] text-white text-lg font-semibold rounded-full hover:bg-[#45a049] transition-colors duration-200"
               >
-                Start Free Trial
+                Sign Up
               </Link>
               <Link
                 href="/signin"
@@ -141,12 +141,9 @@ function Home() {
     );
   }
 
-  const displayName = user.email?.split('@')[0] || 'User';
-
   return (
     <div className="min-h-screen bg-black">
       <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-        {/* Welcome Section with Integrated Stats */}
         <div className="bg-neutral-900 rounded-2xl border border-neutral-800 overflow-hidden">
           <div className="px-8 py-10">
             <div className="flex justify-between items-center mb-6">
@@ -165,7 +162,6 @@ function Home() {
               Your personal gallery collection awaits
             </p>
 
-            {/* Integrated Stats */}
             <div className="flex flex-wrap gap-8">
               <div className="flex items-center">
                 <FolderOpen className="w-5 h-5 text-[#4CAF50] mr-2" />
@@ -186,7 +182,6 @@ function Home() {
           </div>
         </div>
 
-        {/* Recent Sets Section */}
         <div className="mt-12">
           <h2 className="text-2xl font-bold text-white mb-6">Recent Updates</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -239,7 +234,6 @@ function Home() {
           </div>
         </div>
 
-        {/* Quick Stats */}
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
           <div className="bg-neutral-900 p-6 rounded-xl border border-neutral-800 hover:border-[#4CAF50]/50 transition-colors duration-200">
             <div className="flex items-center mb-4">

@@ -1,5 +1,3 @@
-// api/create-checkout-session.ts
-
 import { NextApiRequest, NextApiResponse } from 'next';
 import Stripe from 'stripe';
 import { adminDb } from '../../lib/firebase-admin';
@@ -25,6 +23,7 @@ export default async function handler(
 
   try {
     const { userId, priceId } = req.body;
+
     if (!userId || !priceId) {
       console.error(`[ERROR] Missing required parameters. userId: ${userId}, priceId: ${priceId}`);
       return res.status(400).json({ message: 'Missing required parameters' });
@@ -42,6 +41,7 @@ export default async function handler(
       .get();
 
     let stripeCustomerId: string | undefined;
+
     if (!subscriptionQuery.empty) {
       stripeCustomerId = subscriptionQuery.docs[0].data().stripeCustomerId;
       console.log(`[DEBUG] Active subscription found for userId ${userId}. stripeCustomerId: ${stripeCustomerId}`);
@@ -52,7 +52,7 @@ export default async function handler(
     // Log the environment variable for base URL
     console.log(`[DEBUG] NEXT_PUBLIC_BASE_URL: ${process.env.NEXT_PUBLIC_BASE_URL}`);
 
-    // Build the session configuration.
+    // Build the session configuration
     const sessionConfig: Stripe.Checkout.SessionCreateParams = {
       mode: 'subscription',
       payment_method_types: ['card'],
@@ -63,14 +63,6 @@ export default async function handler(
         },
       ],
       allow_promotion_codes: true,
-      subscription_data: {
-        trial_period_days: 7,
-        trial_settings: {
-          end_behavior: {
-            missing_payment_method: 'create_invoice',
-          },
-        },
-      },
       success_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/?success=true&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/subscription?canceled=true`,
       client_reference_id: userId,

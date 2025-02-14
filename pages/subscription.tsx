@@ -1,4 +1,5 @@
-//pages/subscription.tsx
+
+// pages/subscription.tsx
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '../contexts/AuthContext';
@@ -124,11 +125,6 @@ export default function Subscription() {
 
         <div className="mt-12 max-w-lg mx-auto">
           <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden">
-            {/* Trial Period Banner */}
-            <div className="bg-neutral-800 p-4 flex items-center justify-center space-x-2">
-              <Clock className="h-5 w-5 text-[#4CAF50]" />
-              <span className="text-white">Start with a 7-day free trial</span>
-            </div>
 
             <div className="p-8">
               <div className="flex items-center justify-between">
@@ -153,7 +149,7 @@ export default function Subscription() {
                 ) : user ? (
                   <>
                     <Shield className="mr-2 h-5 w-5" />
-                    Start Free Trial
+                    Subscribe Now
                   </>
                 ) : (
                   'Create Account to Subscribe'

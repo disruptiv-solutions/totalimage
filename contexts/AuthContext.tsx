@@ -1,4 +1,3 @@
-//contexts/AuthContext.tsx
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { 
@@ -16,7 +15,11 @@ interface UserProfile {
   firstName: string;
   lastName: string;
   email: string;
+  username: string;
   isAdmin?: boolean;
+  isAdult: boolean;
+  acceptedTerms: boolean;
+  termsAcceptedAt: string;
   createdAt: string;
   updatedAt?: string;
 }
@@ -24,6 +27,10 @@ interface UserProfile {
 interface SignupData {
   firstName: string;
   lastName: string;
+  username: string;
+  isAdult: boolean;
+  acceptedTerms: boolean;
+  termsAcceptedAt: string;
 }
 
 interface AuthContextType {
@@ -52,7 +59,6 @@ export function useAuth() {
   return context;
 }
 
-// New hook for protected routes
 export function useProtectedRoute() {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -113,7 +119,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         firstName: userData.firstName,
         lastName: userData.lastName,
         email: email,
+        username: userData.username,
         isAdmin: false,
+        isAdult: userData.isAdult,
+        acceptedTerms: userData.acceptedTerms,
+        termsAcceptedAt: userData.termsAcceptedAt,
         createdAt: timestamp,
         updatedAt: timestamp
       };

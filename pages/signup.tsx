@@ -12,6 +12,8 @@ export default function SignUp() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [isAdult, setIsAdult] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -51,6 +53,11 @@ export default function SignUp() {
       return;
     }
 
+    if (!isAdult || !acceptedTerms) {
+      setError('You must confirm that you are 18+ and accept the Terms of Service and Privacy Policy');
+      return;
+    }
+
     try {
       console.log('Starting signup process...');
       setError('');
@@ -58,7 +65,10 @@ export default function SignUp() {
       await signup(email, password, {
         firstName: firstName.trim(),
         lastName: lastName.trim(),
-        username: username.trim()
+        username: username.trim(),
+        isAdult,
+        acceptedTerms,
+        termsAcceptedAt: new Date().toISOString()
       });
       console.log('Signup successful, attempting to redirect...');
       await router.push('/subscription');
@@ -70,11 +80,9 @@ export default function SignUp() {
     }
   };
 
-  // Previous JSX remains the same until the password fields...
   return (
     <div className="min-h-screen flex items-center justify-center bg-black py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
-        {/* Header section remains the same */}
         <div className="text-center">
           <h1 className="text-4xl font-black tracking-tighter text-white mb-2">
             Total<span className="text-[#4CAF50]">Toons</span>
@@ -103,7 +111,6 @@ export default function SignUp() {
             )}
 
             <form className="space-y-6" onSubmit={handleSubmit}>
-              {/* Name fields remain the same */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="first-name" className="block text-sm font-medium text-neutral-300 mb-2">
@@ -148,7 +155,6 @@ export default function SignUp() {
                 </div>
               </div>
 
-              {/* Username field */}
               <div>
                 <label htmlFor="username" className="block text-sm font-medium text-neutral-300 mb-2">
                   Username
@@ -175,7 +181,6 @@ export default function SignUp() {
                 </p>
               </div>
 
-              {/* Email field */}
               <div>
                 <label htmlFor="email-address" className="block text-sm font-medium text-neutral-300 mb-2">
                   Email address
@@ -198,7 +203,6 @@ export default function SignUp() {
                 </div>
               </div>
 
-              {/* Password fields */}
               <div className="space-y-4">
                 <div>
                   <label htmlFor="password" className="block text-sm font-medium text-neutral-300 mb-2">
@@ -255,10 +259,59 @@ export default function SignUp() {
                 </div>
               </div>
 
+              <div className="space-y-4">
+                <div className="flex items-start">
+                  <div className="flex items-center h-5">
+                    <input
+                      id="adult"
+                      name="adult"
+                      type="checkbox"
+                      checked={isAdult}
+                      onChange={(e) => setIsAdult(e.target.checked)}
+                      className="h-4 w-4 rounded border-neutral-700 bg-neutral-800 text-[#4CAF50] focus:ring-[#4CAF50] focus:ring-offset-neutral-900"
+                    />
+                  </div>
+                  <label htmlFor="adult" className="ml-2 block text-sm text-neutral-300">
+                    I confirm that I am at least 18 years old
+                  </label>
+                </div>
+
+                <div className="flex items-start">
+                  <div className="flex items-center h-5">
+                    <input
+                      id="terms"
+                      name="terms"
+                      type="checkbox"
+                      checked={acceptedTerms}
+                      onChange={(e) => setAcceptedTerms(e.target.checked)}
+                      className="h-4 w-4 rounded border-neutral-700 bg-neutral-800 text-[#4CAF50] focus:ring-[#4CAF50] focus:ring-offset-neutral-900"
+                    />
+                  </div>
+                  <label htmlFor="terms" className="ml-2 block text-sm text-neutral-300">
+                    I agree to the{' '}
+                    <button
+                      type="button"
+                      onClick={() => window.open('/terms', '_blank')}
+                      className="text-[#4CAF50] hover:text-[#45a049] transition-colors duration-200"
+                    >
+                      Terms of Service
+                    </button>{' '}
+                    and{' '}
+                    <button
+                      type="button"
+                      onClick={() => window.open('/privacy', '_blank')}
+                      className="text-[#4CAF50] hover:text-[#45a049] transition-colors duration-200"
+                    >
+                      Privacy Policy
+                    </button>
+                  </label>
+                </div>
+              </div>
+
               <div>
                 <button
                   type="submit"
-                  disabled={loading || (confirmPassword && password !== confirmPassword)}
+                  disabled={loading || (confirmPassword && password !== confirmPassword) || !isAdult || !acceptedTerms}
                   className="relative w-full flex items-center justify-center px-8 py-3 bg-[#4CAF50] text-white text-lg font-semibold rounded-lg hover:bg-[#45a049] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4CAF50] focus:ring-offset-neutral-900 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                 >
                   {loading ? (
