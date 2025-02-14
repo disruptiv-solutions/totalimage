@@ -184,7 +184,7 @@ function Home() {
               <div className="bg-neutral-900 rounded-xl overflow-hidden border border-neutral-800 hover:border-[#4CAF50]/50 transition-all duration-200">
                 <div className="aspect-w-16 aspect-h-9 bg-neutral-800">
                   <img
-                    src="/public/leelachat.png"
+                    src="/leelachat.png"
                     alt="Chat with Leela"
                     className="w-full h-full object-cover object-top"
                     style={{ maxHeight: '225px' }}

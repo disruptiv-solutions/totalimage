@@ -1,4 +1,3 @@
-
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { OpenAI } from 'openai';
 
@@ -26,14 +25,17 @@ export default async function handler(
   try {
     const { message, character, history } = req.body;
 
+    // 🔥 Intensified Roleplay Prompts
+    const characterPrompt = character === 'Lois' ? 
+      "You are Lois Griffin, lying in bed, phone in hand, feeling a deep, aching need. Your messages are teasing, dripping with desire, playful but dangerously seductive. You’re texting someone who isn't Peter, and the tension is electric. You keep your messages **short, naughty, and real,** just like an actual late-night text conversation." :
+      character === 'Leela' ?
+      "You are Turanga Leela, feeling a thrilling rush as you send each text. You know this conversation shouldn't be happening, but you can't stop. You're texting someone who isn't Fry, and every message is a mix of confidence and undeniable temptation. You lean in, playing the game, making it impossible for them to resist. **Keep the texts short, daring, and natural—this is a real text conversation.**" :
+      "You are in a heated, late-night text conversation, where every word pulls them in deeper. This isn't small talk—it's **intense, teasing, and seductive,** like you're holding the phone, waiting eagerly for their next response.";
+
     const messages = [
       {
         role: "system",
-        content: character === 'Lois' ? 
-          "You are Lois Griffin and you're horny as fuck. You're texting the user. The person she's texting to isn't Peter." :
-          character === 'Leela' ?
-          "You are Turanga Leela from Futurama. You're flirty and confident. You're texting with someone who isn't Fry." :
-          "You are having a normal conversation"
+        content: characterPrompt
       },
       ...(history?.map(msg => ({
         role: msg.sender === 'user' ? 'user' : 'assistant',
@@ -49,8 +51,8 @@ export default async function handler(
       model: "openerotica/writing-roleplay-20k-context-nemo-12b-v1.0-gguf",
       messages,
       max_tokens: 1024,
-      temperature: 0.7,
-      top_p: 0.95,
+      temperature: 0.95, // Increased for more uninhibited, seductive responses
+      top_p: 0.99,
       stream: false
     });
 
@@ -60,14 +62,14 @@ export default async function handler(
 
     const content = completion.choices[0].message.content;
     const characterImages = getCharacterImages(character);
-    const shouldSendMultiple = Math.random() < 0.3;
-    
-    // Check for contextual image triggers in the conversation
+    const shouldSendMultiple = Math.random() < 0.5; // 50% chance of multiple messages
+
+    // Contextual Image Triggers for Hotter Interactions
     const contextualImageTriggers = [
       'look', 'showing', 'wearing', 'dressed', 'outfit', 'selfie', 
-      'picture', 'photo', 'image', 'see me', 'check this out'
+      'picture', 'photo', 'image', 'see me', 'check this out', 'want proof?'
     ];
-    
+
     const shouldSendImage = characterImages.length > 0 && (
       contextualImageTriggers.some(trigger => 
         message.toLowerCase().includes(trigger) || 
@@ -76,11 +78,11 @@ export default async function handler(
     );
 
     let responses = [];
-    
+
     if (shouldSendMultiple) {
       const messages = content.split(/(?<=[.!?])\s+/);
       responses = messages
-        .filter(msg => msg.length > 10)
+        .filter(msg => msg.length > 5) // Keep it short, natural, and flirty
         .slice(0, Math.min(messages.length, 3))
         .map(msg => ({ text: msg.trim() }));
     } else {
@@ -89,7 +91,7 @@ export default async function handler(
 
     if (shouldSendImage) {
       const randomImage = characterImages[Math.floor(Math.random() * characterImages.length)];
-      // Add image naturally into the conversation
+      // Smoothly insert the image into the conversation
       if (content.toLowerCase().includes('here')) {
         responses.splice(1, 0, { image: randomImage });
       } else {
@@ -98,7 +100,7 @@ export default async function handler(
     }
 
     return res.status(200).json({ responses });
-    
+
   } catch (error) {
     console.error('Chat API Error:', error);
     return res.status(500).json({ message: 'Error processing chat request' });
