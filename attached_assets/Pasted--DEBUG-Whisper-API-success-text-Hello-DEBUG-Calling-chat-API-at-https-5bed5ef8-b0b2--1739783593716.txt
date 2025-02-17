@@ -1,0 +1,52 @@
+[DEBUG] Whisper API success: { text: 'Hello.' }
+[DEBUG] Calling chat API at: https://5bed5ef8-b0b2-44d0-88d4-5a4ca115bef3-00-3aa649c4i5nqk.spock.replit.dev/api/chat
+Chat API Error: BadRequestError: 400 "Bad Request: Invalid state"
+    at APIError.generate (file:///home/runner/workspace/node_modules/openai/error.mjs:41:20)
+    at OpenAI.makeStatusError (file:///home/runner/workspace/node_modules/openai/core.mjs:292:25)
+    at OpenAI.makeRequest (file:///home/runner/workspace/node_modules/openai/core.mjs:336:30)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async handler (webpack-internal:///(api)/./pages/api/chat.ts:61:28)
+    at async K (/home/runner/workspace/node_modules/next/dist/compiled/next-server/pages-api.runtime.dev.js:21:2871)
+    at async U.render (/home/runner/workspace/node_modules/next/dist/compiled/next-server/pages-api.runtime.dev.js:21:3955)
+    at async DevServer.runApi (/home/runner/workspace/node_modules/next/dist/server/next-server.js:603:9)
+    at async NextNodeServer.handleCatchallRenderRequest (/home/runner/workspace/node_modules/next/dist/server/next-server.js:269:37)
+    at async DevServer.handleRequestImpl (/home/runner/workspace/node_modules/next/dist/server/base-server.js:818:17)
+    at async /home/runner/workspace/node_modules/next/dist/server/dev/next-dev-server.js:339:20
+    at async Span.traceAsyncFn (/home/runner/workspace/node_modules/next/dist/trace/trace.js:154:20)
+    at async DevServer.handleRequest (/home/runner/workspace/node_modules/next/dist/server/dev/next-dev-server.js:336:24)
+    at async invokeRender (/home/runner/workspace/node_modules/next/dist/server/lib/router-server.js:173:21)
+    at async handleRequest (/home/runner/workspace/node_modules/next/dist/server/lib/router-server.js:350:24) {
+  status: 400,
+  headers: {
+    'access-control-allow-credentials': 'true',
+    connection: 'keep-alive',
+    'content-length': '38',
+    'content-type': 'application/json',
+    date: 'Mon, 17 Feb 2025 09:12:55 GMT',
+    vary: 'origin, access-control-request-method, access-control-request-headers',
+    'x-request-id': '_PXuDb'
+  },
+  request_id: '_PXuDb',
+  error: 'Bad Request: Invalid state',
+  code: undefined,
+  param: undefined,
+  type: undefined
+}
+ POST /api/chat 500 in 276ms
+[DEBUG] Chat API error (500): {"message":"Error processing chat request"}
+[DEBUG] Voice API error: Error: Failed to get chat response
+    at handler (webpack-internal:///(api)/./pages/api/voice.ts:160:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async K (/home/runner/workspace/node_modules/next/dist/compiled/next-server/pages-api.runtime.dev.js:21:2871)
+    at async U.render (/home/runner/workspace/node_modules/next/dist/compiled/next-server/pages-api.runtime.dev.js:21:3955)
+    at async DevServer.runApi (/home/runner/workspace/node_modules/next/dist/server/next-server.js:603:9)
+    at async NextNodeServer.handleCatchallRenderRequest (/home/runner/workspace/node_modules/next/dist/server/next-server.js:269:37)
+    at async DevServer.handleRequestImpl (/home/runner/workspace/node_modules/next/dist/server/base-server.js:818:17)
+    at async /home/runner/workspace/node_modules/next/dist/server/dev/next-dev-server.js:339:20
+    at async Span.traceAsyncFn (/home/runner/workspace/node_modules/next/dist/trace/trace.js:154:20)
+    at async DevServer.handleRequest (/home/runner/workspace/node_modules/next/dist/server/dev/next-dev-server.js:336:24)
+    at async invokeRender (/home/runner/workspace/node_modules/next/dist/server/lib/router-server.js:173:21)
+    at async handleRequest (/home/runner/workspace/node_modules/next/dist/server/lib/router-server.js:350:24)
+    at async requestHandlerImpl (/home/runner/workspace/node_modules/next/dist/server/lib/router-server.js:374:13)
+    at async Server.requestListener (/home/runner/workspace/node_modules/next/dist/server/lib/start-server.js:141:13)
+ POST /api/voice 500 in 876ms

@@ -163,7 +163,8 @@ function Home() {
         <div className="mt-12">
           <h2 className="text-2xl font-bold text-white mb-6">Chat with Characters</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-12">
-            <Link href="/chat/Lois" className="group">
+            {/* Lois Card */}
+            <div className="group">
               <div className="bg-neutral-900 rounded-xl overflow-hidden border border-neutral-800 hover:border-[#4CAF50]/50 transition-all duration-200">
                 <div className="aspect-w-16 aspect-h-9 bg-neutral-800">
                   <img
@@ -175,12 +176,27 @@ function Home() {
                 </div>
                 <div className="p-4">
                   <h3 className="text-xl font-semibold text-white mb-2">Chat with Lois</h3>
-                  <p className="text-neutral-400">Have a conversation with Lois</p>
+                  <p className="text-neutral-400 mb-4">Have a conversation with Lois</p>
+                  <div className="flex gap-2">
+                    <Link
+                      href="/chat/Lois"
+                      className="flex-1 text-center px-4 py-2 bg-[#4CAF50] text-white rounded hover:bg-[#45a049] transition-colors duration-200"
+                    >
+                      Text
+                    </Link>
+                    <Link
+                      href="/voice/Lois"
+                      className="flex-1 text-center px-4 py-2 bg-neutral-800 text-white border border-neutral-800 rounded hover:border-[#4CAF50]/50 transition-colors duration-200"
+                    >
+                      Voice
+                    </Link>
+                  </div>
                 </div>
               </div>
-            </Link>
+            </div>
 
-            <Link href="/chat/Leela" className="group">
+            {/* Leela Card */}
+            <div className="group">
               <div className="bg-neutral-900 rounded-xl overflow-hidden border border-neutral-800 hover:border-[#4CAF50]/50 transition-all duration-200">
                 <div className="aspect-w-16 aspect-h-9 bg-neutral-800">
                   <img
@@ -192,10 +208,24 @@ function Home() {
                 </div>
                 <div className="p-4">
                   <h3 className="text-xl font-semibold text-white mb-2">Chat with Leela</h3>
-                  <p className="text-neutral-400">Have a conversation with Leela</p>
+                  <p className="text-neutral-400 mb-4">Have a conversation with Leela</p>
+                  <div className="flex gap-2">
+                    <Link
+                      href="/chat/Leela"
+                      className="flex-1 text-center px-4 py-2 bg-[#4CAF50] text-white rounded hover:bg-[#45a049] transition-colors duration-200"
+                    >
+                      Text
+                    </Link>
+                    <Link
+                      href="/voice/Leela"
+                      className="flex-1 text-center px-4 py-2 bg-neutral-800 text-white border border-neutral-800 rounded hover:border-[#4CAF50]/50 transition-colors duration-200"
+                    >
+                      Voice
+                    </Link>
+                  </div>
                 </div>
               </div>
-            </Link>
+            </div>
           </div>
 
           <h2 className="text-2xl font-bold text-white mb-6">Recent Updates</h2>
@@ -271,11 +301,12 @@ function Home() {
             </div>
             <p className="text-neutral-400">
               Full access to all galleries and weekly updates.
-            </p></div>
-              </div>
-            </div>
-            </div>
-            );
-            }
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-            export default Home;
+export default Home;
