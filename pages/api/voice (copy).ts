@@ -39,8 +39,7 @@ export default async function handler(
       });
     }
 
-    console.log('[DEBUG] Received audio string (first 100 chars):', audio.substring(0, 100));
-
+    // Properly handle the input audio data
     const base64Regex = /^data:([^;]+)(?:;codecs=([^;,]+))?;base64,(.+)$/;
     const matches = audio.match(base64Regex);
     if (!matches) {
@@ -49,24 +48,17 @@ export default async function handler(
         error: { message: 'Invalid audio data format' }
       });
     }
-    const [, detectedMimeType, detectedCodec, base64Data] = matches;
-    console.log('[DEBUG] Detected MIME type:', detectedMimeType);
-    if (detectedCodec) {
-      console.log('[DEBUG] Detected codec:', detectedCodec);
-    }
+
+    const [, mimeType, , base64Data] = matches;
     const audioBuffer = Buffer.from(base64Data, 'base64');
 
-    const extMap: Record<string, string> = {
-      'audio/webm': 'webm',
-      'audio/mp4': 'mp4',
-      'audio/mpeg': 'mp3',
-    };
-    const ext = extMap[detectedMimeType] || 'mp3';
+    // Standardize audio format for Whisper API
     const format = {
-      ext,
-      type: detectedMimeType
+      ext: 'mp3',
+      type: 'audio/mpeg'
     };
 
+    // Prepare Whisper API request
     const formData = new FormData();
     formData.append('file', audioBuffer, {
       filename: `audio.${format.ext}`,
@@ -74,6 +66,7 @@ export default async function handler(
     });
     formData.append('model', 'whisper-1');
 
+    // Call Whisper API
     const whisperResponse = await fetch('https://api.openai.com/v1/audio/transcriptions', {
       method: 'POST',
       headers: {
@@ -89,12 +82,15 @@ export default async function handler(
       throw new Error('Transcription failed: ' + errorText);
     }
 
+
     const whisperData = await whisperResponse.json();
     const transcribedMessage = whisperData.text;
 
-    const protocol = req.headers['x-forwarded-proto'] ||
+    // Call chat API
+    const protocol = req.headers['x-forwarded-proto'] || 
       (process.env.NODE_ENV === 'development' ? 'http' : 'https');
     const host = req.headers.host;
+
     const chatRes = await fetch(`${protocol}://${host}/api/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -116,16 +112,19 @@ export default async function handler(
       throw new Error('No response text received');
     }
 
+    // Process visual context
     const contextMatches = aiResponseText.match(/\*([^*]+)\*/g);
-    const visualContext = contextMatches
+    const visualContext = contextMatches 
       ? contextMatches.map(match => match.replace(/\*/g, '').trim()).join(' ')
       : '';
     const ttsText = aiResponseText.replace(/\*[^*]+\*/g, '').trim();
 
-    const voiceId = character.toLowerCase() === 'leela'
-      ? "nU42VjYHsVdnEWnrXcbE"
+    // Get voice ID
+    const voiceId = character.toLowerCase() === 'leela' 
+      ? "nU42VjYHsVdnEWnrXcbE" 
       : process.env.ELEVENLABS_VOICE_ID;
 
+    // Call ElevenLabs API
     const ttsResponse = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
       {
@@ -150,12 +149,15 @@ export default async function handler(
       throw new Error('Failed to generate voice response');
     }
 
+    // Process audio response
     const arrayBuffer = await ttsResponse.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
+    // Create proper data URL for audio
     const base64Audio = buffer.toString('base64');
     const audioDataUrl = `data:audio/mpeg;base64,${base64Audio}`;
 
+    // Return response
     res.status(200).json({
       audio: audioDataUrl,
       contentType: 'audio/mpeg',
@@ -171,4 +173,4 @@ export default async function handler(
       },
     });
   }
-}
+}///

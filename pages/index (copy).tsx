@@ -228,42 +228,31 @@ function Home() {
             </div>
           </div>
 
-            <h2 className="text-2xl font-bold text-white mb-6">Recent Updates</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {recentSets.map((set) => (
-                <Link
-                  key={set.id}
-                  href={`/galleries/${set.galleryId}/sets/${set.id}`}
-                  className="group cursor-pointer rounded-xl overflow-hidden border border-neutral-800 bg-neutral-900 hover:border-[#4CAF50]/50 transition-all duration-200 flex flex-col"
-                >
-                  <div className="relative w-full pt-[56.25%] overflow-hidden bg-neutral-800">
-                    {set.coverPhoto ? (
-                      <>
-                        <img
-                          src={set.coverPhoto}
-                          alt={set.name}
-                          className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-200 group-hover:scale-105"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-                      </>
-                    ) : (
-                      <div className="absolute inset-0 flex items-center justify-center text-white text-lg font-medium p-4 text-center">
-                        {set.name}
-                      </div>
-                    )}
+          <h2 className="text-2xl font-bold text-white mb-6">Recent Updates</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {recentSets.map((set) => (
+              <Link
+                key={set.id}
+                href={`/galleries/${set.galleryId}/sets/${set.id}`}
+                className="group cursor-pointer rounded-xl overflow-hidden border border-neutral-800 bg-neutral-900 hover:border-[#4CAF50]/50 transition-all duration-200 flex flex-col"
+              >
+                <div className="relative w-full pt-[56.25%] bg-neutral-800">
+                  <div className="absolute inset-0 flex items-center justify-center text-white">
+                    {set.name}
                   </div>
-                  <div className="p-4 flex flex-col justify-between flex-grow">
-                    <div>
-                      <h3 className="text-lg font-semibold text-white mb-1 line-clamp-1">{set.name}</h3>
-                      <p className="text-sm text-neutral-400">{set.imageCount} images</p>
-                    </div>
-                    <div className="mt-2 text-xs text-neutral-500">
-                      From {set.galleryName}
-                    </div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                </div>
+                <div className="p-4 flex flex-col justify-between flex-grow">
+                  <div>
+                    <h3 className="text-lg font-semibold text-white mb-1 line-clamp-1">{set.name}</h3>
+                    <p className="text-sm text-neutral-400">{set.imageCount} images</p>
                   </div>
-                </Link>
-              ))}
-           
+                  <div className="mt-2 text-xs text-neutral-500">
+                    From {set.galleryName}
+                  </div>
+                </div>
+              </Link>
+            ))}
 
             <Link
               href="/galleries"

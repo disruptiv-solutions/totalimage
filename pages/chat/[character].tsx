@@ -1,7 +1,6 @@
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
-import { Send, ArrowLeft } from 'lucide-react';
-import Link from 'next/link';
+import { Send } from 'lucide-react';
 
 const getCharacterImages = (character: string): string[] => {
   const images = {
@@ -87,10 +86,10 @@ export default function Chat() {
   };
 
   return (
-    <div className="min-h-screen bg-black relative">
+    <div className="relative w-full h-[calc(100vh-8rem)]">
       {/* Background Image Layer */}
       <div 
-        className="fixed inset-0 bg-cover bg-center opacity-20"
+        className="absolute inset-0 bg-cover bg-center opacity-20"
         style={{ 
           backgroundImage: `url(${backgroundImage})`,
           filter: 'blur(8px)',
@@ -99,15 +98,10 @@ export default function Chat() {
       />
 
       {/* Content Layer */}
-      <div className="relative z-10 w-full max-w-3xl mx-auto px-4 py-8">
-        <div className="flex items-center mb-8">
-          <Link href="/" className="mr-4">
-            <ArrowLeft className="w-6 h-6 text-white hover:text-[#4CAF50] transition-colors" />
-          </Link>
-          <h1 className="text-2xl font-bold text-white">Chat with {character}</h1>
-        </div>
+      <div className="relative z-10 w-full max-w-3xl mx-auto h-full px-4 py-8 flex flex-col">
+        <h1 className="text-2xl font-bold text-white mb-8">Chat with {character}</h1>
 
-        <div className="bg-neutral-900/90 backdrop-blur-sm rounded-xl p-4 h-[calc(100vh-12rem)] overflow-y-auto mb-4 flex flex-col-reverse border border-neutral-800">
+        <div className="bg-neutral-900/90 backdrop-blur-sm rounded-xl p-4 flex-grow overflow-y-auto mb-4 flex flex-col-reverse border border-neutral-800">
           <div className="flex flex-col w-full">
             {messages.map((msg, i) => (
               <div 

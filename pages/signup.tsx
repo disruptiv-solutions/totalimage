@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import { useAuth } from '../contexts/AuthContext';
 import { Lock, Mail, User, AtSign, Loader, ShieldCheck } from 'lucide-react';
 
-export default function SignUp() {
+function SignUp() {
   const router = useRouter();
   const { signup, user } = useAuth();
   const [firstName, setFirstName] = useState('');
@@ -14,6 +14,7 @@ export default function SignUp() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isAdult, setIsAdult] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [emailUpdates, setEmailUpdates] = useState(true);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -68,6 +69,7 @@ export default function SignUp() {
         username: username.trim(),
         isAdult,
         acceptedTerms,
+        emailUpdates,
         termsAcceptedAt: new Date().toISOString()
       });
       console.log('Signup successful, attempting to redirect...');
@@ -306,6 +308,22 @@ export default function SignUp() {
                     </button>
                   </label>
                 </div>
+
+                <div className="flex items-start">
+                  <div className="flex items-center h-5">
+                    <input
+                      id="email-updates"
+                      name="email-updates"
+                      type="checkbox"
+                      checked={emailUpdates}
+                      onChange={(e) => setEmailUpdates(e.target.checked)}
+                      className="h-4 w-4 rounded border-neutral-700 bg-neutral-800 text-[#4CAF50] focus:ring-[#4CAF50] focus:ring-offset-neutral-900"
+                    />
+                  </div>
+                  <label htmlFor="email-updates" className="ml-2 block text-sm text-neutral-300">
+                    Send me email updates about new sets and content from TotalToons34
+                  </label>
+                </div>
               </div>
 
               <div>
@@ -313,21 +331,23 @@ export default function SignUp() {
                   type="submit"
                   disabled={loading || (confirmPassword && password !== confirmPassword) || !isAdult || !acceptedTerms}
                   className="relative w-full flex items-center justify-center px-8 py-3 bg-[#4CAF50] text-white text-lg font-semibold rounded-lg hover:bg-[#45a049] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4CAF50] focus:ring-offset-neutral-900 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-                >
-                  {loading ? (
-                    <>
-                      <Loader className="animate-spin -ml-1 mr-2 h-5 w-5" />
-                      Creating account...
-                    </>
-                  ) : (
-                    'Create account'
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+                                >
+                                  {loading ? (
+                                    <>
+                                      <Loader className="animate-spin -ml-1 mr-2 h-5 w-5" />
+                                      Creating account...
+                                    </>
+                                  ) : (
+                                    'Create account'
+                                  )}
+                                </button>
+                              </div>
+                            </form>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+
+                export default SignUp;

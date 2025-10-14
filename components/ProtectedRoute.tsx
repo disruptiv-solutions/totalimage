@@ -1,43 +1,58 @@
-//components/ProtectedRoute.tsx
+
+
+// components/ProtectedRoute.tsx
 import { useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '../contexts/AuthContext';
+import { useSubscriptionStatus } from '../hooks/useSubscriptionStatus';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requireAdmin?: boolean;
+  requireSubscription?: boolean;
   fallbackPath?: string;
 }
 
 export default function ProtectedRoute({ 
   children, 
   requireAdmin = false,
+  requireSubscription = true,
   fallbackPath = '/signin' 
 }: ProtectedRouteProps) {
-  const { user, loading, getUserProfile } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const { hasActiveSubscription, isAdmin, loading: subscriptionLoading } = useSubscriptionStatus();
   const router = useRouter();
 
   useEffect(() => {
-    async function checkAccess() {
-      if (!loading) {
-        if (!user) {
-          router.push(fallbackPath);
-          return;
-        }
+    if (!authLoading && !subscriptionLoading) {
+      if (!user) {
+        router.push(fallbackPath);
+        return;
+      }
 
-        if (requireAdmin) {
-          const profile = await getUserProfile(user.uid);
-          if (!profile?.isAdmin) {
-            router.push('/');
-          }
-        }
+      if (requireAdmin && !isAdmin) {
+        router.push('/');
+        return;
+      }
+
+      if (requireSubscription && !hasActiveSubscription && !isAdmin) {
+        router.push('/subscription');
+        return;
       }
     }
+  }, [
+    user, 
+    authLoading, 
+    subscriptionLoading, 
+    hasActiveSubscription, 
+    isAdmin, 
+    router, 
+    requireAdmin, 
+    requireSubscription, 
+    fallbackPath
+  ]);
 
-    checkAccess();
-  }, [user, loading, router, requireAdmin, fallbackPath, getUserProfile]);
-
-  if (loading) {
+  if (authLoading || subscriptionLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
@@ -45,7 +60,8 @@ export default function ProtectedRoute({
     );
   }
 
-  if (!user) {
+  // Allow access for admins or users with valid subscriptions
+  if (!user || (!isAdmin && requireSubscription && !hasActiveSubscription)) {
     return null;
   }
 

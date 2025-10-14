@@ -29,6 +29,7 @@ interface SignupData {
   lastName: string;
   username: string;
   isAdult: boolean;
+   emailUpdates: boolean; 
   acceptedTerms: boolean;
   termsAcceptedAt: string;
 }
