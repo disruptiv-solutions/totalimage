@@ -5,6 +5,7 @@ import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
+  sendPasswordResetEmail,
   User,
   updateProfile
 } from 'firebase/auth';
@@ -40,6 +41,7 @@ interface AuthContextType {
   signup: (email: string, password: string, userData: SignupData) => Promise<User>;
   login: (email: string, password: string) => Promise<User>;
   logout: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
   getUserProfile: (userId: string) => Promise<UserProfile | null>;
 }
 
@@ -49,6 +51,7 @@ const AuthContext = createContext<AuthContextType>({
   signup: async () => { throw new Error('AuthContext not initialized') },
   login: async () => { throw new Error('AuthContext not initialized') },
   logout: async () => { throw new Error('AuthContext not initialized') },
+  resetPassword: async () => { throw new Error('AuthContext not initialized') },
   getUserProfile: async () => { throw new Error('AuthContext not initialized') },
 });
 
@@ -160,12 +163,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const resetPassword = async (email: string) => {
+    try {
+      await sendPasswordResetEmail(auth, email);
+    } catch (error) {
+      console.error('Password reset error:', error);
+      throw error;
+    }
+  };
+
   const value = {
     user,
     loading,
     signup,
     login,
     logout,
+    resetPassword,
     getUserProfile
   };
 

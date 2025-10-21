@@ -48,6 +48,26 @@ const AdminDashboard: React.FC = () => {
                   <p className="mt-2 text-sm text-gray-600">Organize and edit galleries</p>
                 </div>
               </Link>
+
+              <Link
+                href="/admin/generate"
+                className="flex items-center justify-center px-4 py-6 bg-white rounded-lg shadow hover:shadow-md transition-shadow duration-200"
+              >
+                <div className="text-center">
+                  <h2 className="text-xl font-semibold text-gray-900">Generate</h2>
+                  <p className="mt-2 text-sm text-gray-600">Generate new content</p>
+                </div>
+              </Link>
+
+              <Link
+                href="/admin/config"
+                className="flex items-center justify-center px-4 py-6 bg-white rounded-lg shadow hover:shadow-md transition-shadow duration-200"
+              >
+                <div className="text-center">
+                  <h2 className="text-xl font-semibold text-gray-900">Config</h2>
+                  <p className="mt-2 text-sm text-gray-600">Configure AI models</p>
+                </div>
+              </Link>
             </div>
           </div>
         </div>

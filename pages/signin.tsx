@@ -1,15 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '../contexts/AuthContext';
-import { Lock, Mail, Loader } from 'lucide-react';
+import { Lock, Mail, Loader, Eye, EyeOff } from 'lucide-react';
 
 export default function SignIn() {
   const router = useRouter();
-  const { login, user } = useAuth();
+  const { login, user, resetPassword } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [resetEmailSent, setResetEmailSent] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -35,6 +38,30 @@ export default function SignIn() {
       setError('Failed to sign in');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleTogglePassword = () => {
+    setShowPassword(!showPassword);
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setError('Please enter your email address');
+      return;
+    }
+
+    try {
+      setError('');
+      setResetEmailSent(false);
+      setResetLoading(true);
+      await resetPassword(email);
+      setResetEmailSent(true);
+    } catch (err) {
+      console.error('Password reset error:', err);
+      setError('Failed to send password reset email. Please check your email address.');
+    } finally {
+      setResetLoading(false);
     }
   };
 
@@ -65,6 +92,14 @@ export default function SignIn() {
             {error && (
               <div className="mb-6 rounded-lg bg-red-500/10 border border-red-500/20 p-4">
                 <div className="text-sm text-red-400">{error}</div>
+              </div>
+            )}
+
+            {resetEmailSent && (
+              <div className="mb-6 rounded-lg bg-green-500/10 border border-green-500/20 p-4">
+                <div className="text-sm text-green-400">
+                  Password reset email sent! Check your inbox for instructions.
+                </div>
               </div>
             )}
 
@@ -102,15 +137,41 @@ export default function SignIn() {
                   <input
                     id="password"
                     name="password"
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     autoComplete="current-password"
                     required
-                    className="block w-full pl-10 pr-3 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-[#4CAF50] focus:border-transparent transition-all duration-200"
+                    className="block w-full pl-10 pr-12 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-[#4CAF50] focus:border-transparent transition-all duration-200"
                     placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   />
+                  <button
+                    type="button"
+                    onClick={handleTogglePassword}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer hover:opacity-70 transition-opacity duration-200"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    tabIndex={0}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5 text-neutral-500" />
+                    ) : (
+                      <Eye className="h-5 w-5 text-neutral-500" />
+                    )}
+                  </button>
                 </div>
+              </div>
+
+              <div className="flex items-center justify-end">
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  disabled={resetLoading}
+                  className="text-sm font-medium text-[#4CAF50] hover:text-[#45a049] transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-label="Forgot password"
+                  tabIndex={0}
+                >
+                  {resetLoading ? 'Sending...' : 'Forgot Password?'}
+                </button>
               </div>
 
               <div>
