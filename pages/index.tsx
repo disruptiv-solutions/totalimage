@@ -171,49 +171,98 @@ function Home() {
         <div className="mt-12">
           <h2 className="text-2xl font-bold text-white mb-6">Chat with Characters</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-12">
-            {[
-              {
-                name: 'Lois',
-                description: 'Have a conversation with Lois',
-                image: '/loischat.png',
-              },
-              {
-                name: 'Leela',
-                description: 'Have a conversation with Leela',
-                image: '/leelachat.png',
-              },
-            ].map((c) => (
-              <Link
-                key={c.name}
-                href={getCharacterChatHref(c.name)}
-                aria-label={`Chat with ${c.name}`}
-                className="group relative rounded-2xl overflow-hidden border border-neutral-800 bg-neutral-900 hover:border-[#4CAF50]/40 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#4CAF50]"
-              >
-                <div className="relative aspect-w-1 aspect-h-1 bg-neutral-800 overflow-hidden">
-                  <img
-                    src={c.image}
-                    alt={`Chat with ${c.name}`}
-                    className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-300 group-hover:scale-[1.03]"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent" />
-                  <div className="absolute inset-x-0 bottom-0 p-5">
-                    <div className="flex items-end justify-between gap-4">
-                      <div className="min-w-0">
-                        <h3 className="text-xl font-semibold text-white leading-tight">
-                          Chat with <span className="text-white">{c.name}</span>
-                        </h3>
-                        <p className="text-sm text-neutral-300 mt-1 line-clamp-1">{c.description}</p>
+            {(() => {
+              // Get all characters from galleries
+              const characterCards = galleries.map((gallery) => {
+                // Get profile image from first set's coverPhoto, or use a fallback
+                const profileImage = gallery.sets.find((set) => set.coverPhoto)?.coverPhoto || null;
+                return {
+                  id: gallery.id,
+                  name: gallery.name,
+                  description: `Have a conversation with ${gallery.name}`,
+                  image: profileImage,
+                };
+              });
+
+              // Ensure we have an even number for 2x2 grid
+              const displayCards = [...characterCards];
+              if (displayCards.length % 2 !== 0) {
+                displayCards.push({
+                  id: 'coming-soon',
+                  name: 'More Coming Soon',
+                  description: 'New characters will be added soon',
+                  image: null,
+                });
+              }
+
+              return displayCards.map((c) => {
+                if (c.id === 'coming-soon') {
+                  return (
+                    <div
+                      key={c.id}
+                      className="group relative rounded-2xl overflow-hidden border border-neutral-800 bg-neutral-900 border-dashed"
+                    >
+                      <div className="relative aspect-video bg-neutral-800/50 overflow-hidden flex items-center justify-center">
+                        <div className="text-center p-8">
+                          <div className="w-16 h-16 bg-[#4CAF50]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Camera className="w-8 h-8 text-[#4CAF50]" />
+                          </div>
+                          <h3 className="text-xl font-semibold text-white leading-tight mb-2">
+                            {c.name}
+                          </h3>
+                          <p className="text-sm text-neutral-400">{c.description}</p>
+                        </div>
                       </div>
-                      <span className="shrink-0 inline-flex items-center justify-center px-4 py-2 rounded-full bg-[#4CAF50] text-white font-semibold group-hover:bg-[#45a049] transition-colors duration-200">
-                        Chat
-                      </span>
                     </div>
-                  </div>
-                </div>
-              </Link>
-            ))}
+                  );
+                }
+
+                return (
+                  <Link
+                    key={c.id}
+                    href={getCharacterChatHref(c.name)}
+                    aria-label={`Chat with ${c.name}`}
+                    className="group relative rounded-2xl overflow-hidden border border-neutral-800 bg-neutral-900 hover:border-[#4CAF50]/40 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#4CAF50]"
+                  >
+                    <div className="relative aspect-video bg-neutral-800 overflow-hidden">
+                      {c.image ? (
+                        <>
+                          <img
+                            src={c.image}
+                            alt={`Chat with ${c.name}`}
+                            className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-300 group-hover:scale-[1.03]"
+                            loading="lazy"
+                            decoding="async"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent" />
+                        </>
+                      ) : (
+                        <div className="absolute inset-0 bg-neutral-800 flex items-center justify-center">
+                          <div className="text-center">
+                            <div className="w-16 h-16 bg-[#4CAF50]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                              <Camera className="w-8 h-8 text-[#4CAF50]" />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      <div className="absolute inset-x-0 bottom-0 p-5">
+                        <div className="flex items-end justify-between gap-4">
+                          <div className="min-w-0">
+                            <h3 className="text-xl font-semibold text-white leading-tight">
+                              Chat with <span className="text-white">{c.name}</span>
+                            </h3>
+                            <p className="text-sm text-neutral-300 mt-1 line-clamp-1">{c.description}</p>
+                          </div>
+                          <span className="shrink-0 inline-flex items-center justify-center px-4 py-2 rounded-full bg-[#4CAF50] text-white font-semibold group-hover:bg-[#45a049] transition-colors duration-200">
+                            Chat
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              });
+            })()}
           </div>
 
             <h2 className="text-2xl font-bold text-white mb-6">Recent Updates</h2>
@@ -224,7 +273,7 @@ function Home() {
                   href={`/characters/${set.galleryId}/galleries/${set.id}`}
                   className="group cursor-pointer rounded-xl overflow-hidden border border-neutral-800 bg-neutral-900 hover:border-[#4CAF50]/50 transition-all duration-200 flex flex-col"
                 >
-                  <div className="relative w-full aspect-w-1 aspect-h-1 overflow-hidden bg-neutral-800">
+                  <div className="relative w-full pt-[56.25%] overflow-hidden bg-neutral-800">
                     {set.coverPhoto ? (
                       <>
                         <img
@@ -257,7 +306,7 @@ function Home() {
               href="/characters"
               className="group cursor-pointer rounded-xl overflow-hidden border border-neutral-800 bg-neutral-900 hover:border-[#4CAF50]/50 transition-all duration-200 flex flex-col"
             >
-              <div className="relative w-full aspect-w-1 aspect-h-1 bg-neutral-800/50">
+              <div className="relative w-full pt-[56.25%] bg-neutral-800/50">
                 <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
                   <div className="w-16 h-16 bg-[#4CAF50]/10 rounded-full flex items-center justify-center mb-4 group-hover:bg-[#4CAF50]/20 transition-colors duration-200">
                     <Camera className="w-8 h-8 text-[#4CAF50]" />
