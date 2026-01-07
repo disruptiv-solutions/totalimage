@@ -251,6 +251,7 @@ const CharacterGalleryPage: React.FC = () => {
               </div>
             )}
             {!rightCollapsed && (
+              <>
             <div className={`mb-6 transition-opacity duration-200 ${loading || !gallery ? 'opacity-60' : 'opacity-100'}`}>
               <div className="text-sm text-neutral-400 mb-2">
                 <Link href="/characters" className="hover:text-[#4CAF50] transition-colors duration-200">
@@ -423,6 +424,7 @@ const CharacterGalleryPage: React.FC = () => {
                 </div>
               </div>
             )}
+              </>
             )}
           </section>
         </div>
