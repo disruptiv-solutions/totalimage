@@ -118,6 +118,15 @@ export function useGalleryCounts(): Gallery[] {
         return () => {
           setUnsubs.forEach((unsub) => unsub());
         };
+      },
+      (error) => {
+        // Handle permission errors gracefully
+        if (error.code === 'permission-denied') {
+          console.warn('Permission denied accessing galleries. User may not have access.');
+          setGalleries([]);
+        } else {
+          console.error('Error fetching galleries:', error);
+        }
       }
     );
 

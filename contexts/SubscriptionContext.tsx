@@ -47,7 +47,8 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     }
 
     // Subscribe to the active subscription
-    const subscriptionRef = collection(db, 'users', user.uid, 'subscription');
+    // Note: Using 'subscriptions' (plural) to match the API endpoint structure
+    const subscriptionRef = collection(db, 'users', user.uid, 'subscriptions');
     const q = query(
       subscriptionRef,
       where('status', 'in', ['active', 'trialing'])

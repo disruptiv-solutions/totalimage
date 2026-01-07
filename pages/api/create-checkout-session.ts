@@ -29,24 +29,33 @@ export default async function handler(
       return res.status(400).json({ message: 'Missing required parameters' });
     }
 
+    if (!adminDb) {
+      console.error('[ERROR] Firebase Admin DB is not initialized');
+      return res.status(500).json({ message: 'Server configuration error' });
+    }
+
     console.log(`[DEBUG] Creating checkout session for userId: ${userId} with priceId: ${priceId}`);
 
     // Retrieve active subscription if any
-    const subscriptionQuery = await adminDb
-      .collection('users')
-      .doc(userId)
-      .collection('subscriptions')
-      .where('status', '==', 'active')
-      .limit(1)
-      .get();
-
     let stripeCustomerId: string | undefined;
+    try {
+      const subscriptionQuery = await adminDb
+        .collection('users')
+        .doc(userId)
+        .collection('subscriptions')
+        .where('status', '==', 'active')
+        .limit(1)
+        .get();
 
-    if (!subscriptionQuery.empty) {
-      stripeCustomerId = subscriptionQuery.docs[0].data().stripeCustomerId;
-      console.log(`[DEBUG] Active subscription found for userId ${userId}. stripeCustomerId: ${stripeCustomerId}`);
-    } else {
-      console.log(`[DEBUG] No active subscription found for userId: ${userId}`);
+      if (!subscriptionQuery.empty) {
+        stripeCustomerId = subscriptionQuery.docs[0].data().stripeCustomerId;
+        console.log(`[DEBUG] Active subscription found for userId ${userId}. stripeCustomerId: ${stripeCustomerId}`);
+      } else {
+        console.log(`[DEBUG] No active subscription found for userId: ${userId}`);
+      }
+    } catch (dbError: any) {
+      console.warn(`[WARN] Error querying subscriptions (non-fatal): ${dbError.message}`);
+      // Continue without customer ID - Stripe will create a new customer
     }
 
     // Log the environment variable for base URL
@@ -71,7 +80,7 @@ export default async function handler(
     if (stripeCustomerId) {
       sessionConfig.customer = stripeCustomerId;
     } else {
-      console.log(`[DEBUG] No stripeCustomerId available; consider setting customer_email if possible.`);
+      console.log(`[DEBUG] No stripeCustomerId available; Stripe will create a new customer.`);
     }
 
     console.debug('[DEBUG] Final checkout session config:', sessionConfig);
