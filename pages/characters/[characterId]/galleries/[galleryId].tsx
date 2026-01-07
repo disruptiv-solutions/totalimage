@@ -3,9 +3,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { db } from '../../../../lib/firebase';
 import { collection, doc, getDoc, getDocs, onSnapshot, orderBy, query } from 'firebase/firestore';
-import { ArrowLeft, Calendar, Camera, ChevronLeft, ChevronRight, Grid, Image as ImageIcon } from 'lucide-react';
+import { ArrowLeft, Calendar, Camera, Grid, Image as ImageIcon } from 'lucide-react';
 import { CharacterProfilePanel } from '../../../../components/characters/CharacterProfilePanel';
-import { usePanelState } from '../../../../hooks/usePanelState';
 
 type CharacterData = {
   id: string;
@@ -35,7 +34,6 @@ const CharacterGalleryPage: React.FC = () => {
   const characterId = typeof router.query.characterId === 'string' ? router.query.characterId : undefined;
   const galleryId = typeof router.query.galleryId === 'string' ? router.query.galleryId : undefined;
 
-  const { leftCollapsed, rightCollapsed, toggleLeft, toggleRight } = usePanelState();
   const [character, setCharacter] = useState<CharacterData | null>(null);
   const [gallery, setGallery] = useState<GalleryData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -209,9 +207,7 @@ const CharacterGalleryPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-black w-full max-w-full overflow-x-hidden">
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-10 py-8 w-full">
-        <div className={`grid grid-cols-1 gap-8 xl:gap-10 transition-all duration-300 w-full ${
-          leftCollapsed ? 'lg:grid-cols-[64px_1fr]' : 'lg:grid-cols-[360px_1fr]'
-        }`}>
+        <div className="grid grid-cols-1 gap-8 xl:gap-10 transition-all duration-300 w-full lg:grid-cols-[360px_1fr]">
           <CharacterProfilePanel
             characterName={characterName}
             characterId={characterId ?? '/characters'}
@@ -219,39 +215,9 @@ const CharacterGalleryPage: React.FC = () => {
             galleryCount={galleryCount}
             activeTab="galleries"
             isLoading={loading || !character}
-            collapsed={leftCollapsed}
-            onToggleCollapse={toggleLeft}
           />
 
           <section className="relative">
-            {/* Right Panel Toggle Button - Desktop Only */}
-            {!rightCollapsed && (
-              <button
-                onClick={toggleRight}
-                className="hidden lg:flex absolute -left-3 top-6 z-10 items-center justify-center w-6 h-6 bg-neutral-800 border border-neutral-700 rounded-full text-neutral-400 hover:text-white hover:bg-neutral-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#4CAF50]"
-                aria-label="Hide right panel"
-                title="Hide right panel"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            )}
-            {rightCollapsed && (
-              <button
-                onClick={toggleRight}
-                className="hidden lg:flex fixed right-4 top-24 z-20 items-center justify-center w-10 h-10 bg-neutral-800 border border-neutral-700 rounded-full text-neutral-400 hover:text-white hover:bg-neutral-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#4CAF50] shadow-lg"
-                aria-label="Show right panel"
-                title="Show right panel"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-            )}
-            {rightCollapsed && (
-              <div className="hidden lg:flex items-center justify-center min-h-[60vh] text-neutral-500">
-                <p>Right panel collapsed</p>
-              </div>
-            )}
-            {!rightCollapsed && (
-              <>
             <div className={`mb-6 transition-opacity duration-200 ${loading || !gallery ? 'opacity-60' : 'opacity-100'}`}>
               <div className="text-sm text-neutral-400 mb-2">
                 <Link href="/characters" className="hover:text-[#4CAF50] transition-colors duration-200">
@@ -423,8 +389,6 @@ const CharacterGalleryPage: React.FC = () => {
                   {selectedImageIndex + 1} / {gallery.images.length}
                 </div>
               </div>
-            )}
-              </>
             )}
           </section>
         </div>

@@ -3,9 +3,8 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { db } from '../../../lib/firebase';
 import { doc, getDoc, collection, getDocs, query, orderBy } from 'firebase/firestore';
-import { Camera, ChevronLeft, ChevronRight, FolderOpen } from 'lucide-react';
+import { Camera, FolderOpen } from 'lucide-react';
 import { CharacterProfilePanel } from '../../../components/characters/CharacterProfilePanel';
-import { usePanelState } from '../../../hooks/usePanelState';
 
 interface SetData {
   id: string;
@@ -30,7 +29,6 @@ const GalleryDetailPage: React.FC = () => {
   const routeCharacterId = typeof router.query.characterId === 'string' ? router.query.characterId : undefined;
   const characterId = routeGalleryId ?? routeCharacterId;
 
-  const { leftCollapsed, rightCollapsed, toggleLeft, toggleRight } = usePanelState();
   const [gallery, setGallery] = useState<Gallery | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
@@ -144,9 +142,7 @@ const GalleryDetailPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-black w-full max-w-full overflow-x-hidden">
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-10 py-8 w-full">
-        <div className={`grid grid-cols-1 gap-8 xl:gap-10 transition-all duration-300 w-full ${
-          leftCollapsed ? 'lg:grid-cols-[64px_1fr]' : 'lg:grid-cols-[360px_1fr]'
-        }`}>
+        <div className="grid grid-cols-1 gap-8 xl:gap-10 transition-all duration-300 w-full lg:grid-cols-[360px_1fr]">
           {/* Left Profile Panel */}
           <CharacterProfilePanel
             characterName={gallery.name}
@@ -154,33 +150,10 @@ const GalleryDetailPage: React.FC = () => {
             profileImageUrl={profileImageUrl}
             galleryCount={gallery.setCount}
             activeTab="galleries"
-            collapsed={leftCollapsed}
-            onToggleCollapse={toggleLeft}
           />
 
           {/* Main Content */}
           <section className="relative">
-            {/* Right Panel Toggle Button - Desktop Only */}
-            {!rightCollapsed && (
-              <button
-                onClick={toggleRight}
-                className="hidden lg:flex absolute -left-3 top-6 z-10 items-center justify-center w-6 h-6 bg-neutral-800 border border-neutral-700 rounded-full text-neutral-400 hover:text-white hover:bg-neutral-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#4CAF50]"
-                aria-label="Hide right panel"
-                title="Hide right panel"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            )}
-            {rightCollapsed && (
-              <button
-                onClick={toggleRight}
-                className="hidden lg:flex fixed right-4 top-24 z-20 items-center justify-center w-10 h-10 bg-neutral-800 border border-neutral-700 rounded-full text-neutral-400 hover:text-white hover:bg-neutral-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#4CAF50] shadow-lg"
-                aria-label="Show right panel"
-                title="Show right panel"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-            )}
             <div className="flex items-end justify-between gap-4 mb-6">
               <div>
                 <h2 className="text-2xl font-bold text-white">Galleries</h2>
