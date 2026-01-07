@@ -4,13 +4,14 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '../contexts/AuthContext';
 import { createCheckoutSession } from '../lib/stripe';
-import { Shield, Clock, Camera, Check, Loader, Sparkles, Star } from 'lucide-react';
+import { Shield, Clock, Camera, Check, Loader, Sparkles, Star, Calendar } from 'lucide-react';
 
 const plan = {
-  name: 'Premium Access',
-  normalPrice: '$9.99',
-  promoPrice: '$2.99',
-  priceId: 'price_1Qq1cWPNFjVZijl9LxefKEv7',
+  name: 'Total Toon Tease',
+  monthlyPrice: '$3.99',
+  yearlyPrice: '$39.99',
+  monthlyPriceId: 'price_1Sn6PePNFjVZijl9sglHMWri',
+  yearlyPriceId: 'price_1Sn6QMPNFjVZijl9TV2mIPxb',
   features: [
     'Full access to all TotalToons34 galleries',
     'Unlimited high-resolution image downloads',
@@ -46,13 +47,15 @@ const createStripeCustomer = async (userId: string, email: string) => {
   }
 };
 
+type BillingPeriod = 'monthly' | 'yearly';
+
 export default function Subscription() {
   const { user } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [canceled, setCanceled] = useState(false);
-  const [remainingSpots, setRemainingSpots] = useState(25); // This would normally be fetched from your backend
+  const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('monthly');
 
   // Handle canceled checkout redirect
   useEffect(() => {
@@ -89,7 +92,8 @@ export default function Subscription() {
         customerId = customerData.customerId;
       }
 
-      await createCheckoutSession(user.uid, plan.priceId);
+      const priceId = billingPeriod === 'monthly' ? plan.monthlyPriceId : plan.yearlyPriceId;
+      await createCheckoutSession(user.uid, priceId);
     } catch (err: any) {
       console.error('Subscription error:', err);
       setError('Failed to start subscription process. Please try again.');
@@ -97,6 +101,12 @@ export default function Subscription() {
       setLoading(false);
     }
   };
+
+  // Calculate yearly savings
+  const monthlyTotal = 3.99 * 12; // $47.88
+  const yearlyPrice = 39.99;
+  const savings = monthlyTotal - yearlyPrice; // $7.89
+  const savingsPercent = Math.round((savings / monthlyTotal) * 100); // ~16%
 
   return (
     <div className="min-h-screen bg-black">
@@ -114,20 +124,40 @@ export default function Subscription() {
           </p>
         </div>
 
-        {/* Special Offer Banner */}
+        {/* Billing Period Toggle */}
         <div className="mt-8 max-w-2xl mx-auto">
-          <div className="bg-[#4CAF50]/10 border border-[#4CAF50]/20 rounded-xl p-6 text-center">
-            <div className="flex justify-center mb-4">
-              <Sparkles className="h-8 w-8 text-[#4CAF50]" />
-            </div>
-            <h3 className="text-xl font-semibold text-white mb-2">
-              Limited Time Launch Offer!
-            </h3>
-            <p className="text-neutral-300">
-              First <span className="text-[#4CAF50] font-bold">{remainingSpots}</span> subscribers get a special rate of just{' '}
-              <span className="text-[#4CAF50] font-bold">{plan.promoPrice}/month</span> forever!
-            </p>
+          <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-1 flex gap-2">
+            <button
+              onClick={() => setBillingPeriod('monthly')}
+              className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all duration-200 ${
+                billingPeriod === 'monthly'
+                  ? 'bg-[#4CAF50] text-white'
+                  : 'text-neutral-400 hover:text-white'
+              }`}
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setBillingPeriod('yearly')}
+              className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all duration-200 relative ${
+                billingPeriod === 'yearly'
+                  ? 'bg-[#4CAF50] text-white'
+                  : 'text-neutral-400 hover:text-white'
+              }`}
+            >
+              Yearly
+              {billingPeriod === 'yearly' && (
+                <span className="absolute -top-2 -right-2 bg-yellow-500 text-black text-xs font-bold px-2 py-0.5 rounded-full">
+                  Save {savingsPercent}%
+                </span>
+              )}
+            </button>
           </div>
+          {billingPeriod === 'yearly' && (
+            <p className="mt-2 text-center text-sm text-[#4CAF50]">
+              Save ${savings.toFixed(2)} per year with annual billing
+            </p>
+          )}
         </div>
 
         {canceled && (
@@ -150,14 +180,22 @@ export default function Subscription() {
           <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden">
 
             <div className="p-8">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between mb-2">
                 <h3 className="text-2xl font-bold text-white">{plan.name}</h3>
-                <div className="flex items-center">
-                  <span className="text-neutral-500 line-through mr-2">{plan.normalPrice}</span>
-                  <span className="text-3xl font-bold text-[#4CAF50]">{plan.promoPrice}</span>
-                  <span className="text-neutral-400 ml-1">/month</span>
+                <div className="flex items-baseline">
+                  <span className="text-3xl font-bold text-[#4CAF50]">
+                    {billingPeriod === 'monthly' ? plan.monthlyPrice : plan.yearlyPrice}
+                  </span>
+                  <span className="text-neutral-400 ml-1">
+                    /{billingPeriod === 'monthly' ? 'month' : 'year'}
+                  </span>
                 </div>
               </div>
+              {billingPeriod === 'yearly' && (
+                <p className="text-sm text-neutral-400 mb-4">
+                  ${(parseFloat(plan.yearlyPrice.replace('$', '')) / 12).toFixed(2)}/month billed annually
+                </p>
+              )}
 
               <button
                 onClick={handleSubscribe}
