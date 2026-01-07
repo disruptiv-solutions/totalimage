@@ -1,11 +1,15 @@
 import { useAuth } from '../contexts/AuthContext';
 import Link from 'next/link';
-import { Camera, Star, ImagePlus, Clock, Image, FolderOpen } from 'lucide-react';
+import { useRouter } from 'next/router';
+import { useEffect, useState } from 'react';
+import { Camera, Star, ImagePlus, Clock, Image, FolderOpen, CheckCircle } from 'lucide-react';
 import { useGalleryCounts } from '../hooks/useGalleryCounts';
 
 function Home() {
   const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
   const galleries = useGalleryCounts();
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const getCharacterChatHref = (characterName: string) => {
     const matchedGallery = galleries.find(
@@ -36,6 +40,20 @@ function Home() {
       return dateB.getTime() - dateA.getTime();
     })
     .slice(0, 3);
+
+  // Handle successful checkout redirect
+  useEffect(() => {
+    if (router.query.success === 'true' && router.query.session_id) {
+      setShowSuccess(true);
+      // Remove query params from URL after showing success message
+      router.replace('/', undefined, { shallow: true });
+      // Hide success message after 5 seconds
+      const timer = setTimeout(() => {
+        setShowSuccess(false);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [router.query]);
 
   if (authLoading) {
     return (
@@ -131,6 +149,15 @@ function Home() {
   return (
     <div className="min-h-screen bg-black">
       <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+        {showSuccess && (
+          <div className="mb-6 rounded-xl bg-[#4CAF50]/10 border border-[#4CAF50]/30 p-4 flex items-center gap-3 animate-in slide-in-from-top-5">
+            <CheckCircle className="w-6 h-6 text-[#4CAF50] flex-shrink-0" />
+            <div className="flex-1">
+              <p className="text-white font-semibold">Subscription Successful!</p>
+              <p className="text-neutral-300 text-sm">Welcome to TotalToons34 Premium. You now have full access to all galleries.</p>
+            </div>
+          </div>
+        )}
         <div className="bg-neutral-900 rounded-2xl border border-neutral-800 overflow-hidden">
           <div className="px-8 py-10">
             <div className="flex justify-between items-center mb-6">

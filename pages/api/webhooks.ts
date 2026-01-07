@@ -35,7 +35,7 @@ async function updateSubscriptionStatus(
       const subscriptionCollectionRef = adminDb
         .collection('users')
         .doc(userId)
-        .collection('subscription');
+        .collection('subscriptions');
 
       const querySnapshot = await subscriptionCollectionRef
         .where('stripeCustomerId', '==', customerId)
@@ -74,7 +74,7 @@ async function updateSubscriptionStatus(
       // Otherwise, find the subscription document across all users using a collectionGroup query.
       console.log('firebaseUID not found in customer metadata. Searching via collectionGroup query.');
       const subscriptionsQuery = adminDb
-        .collectionGroup('subscription')
+        .collectionGroup('subscriptions')
         .where('stripeCustomerId', '==', customerId)
         .where('stripeSubscriptionId', '==', subscription.id)
         .limit(1);
@@ -142,7 +142,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           const subscriptionRef = adminDb
             .collection('users')
             .doc(session.client_reference_id)
-            .collection('subscription')
+            .collection('subscriptions')
             .doc(subscriptionId);
 
           const newData = {

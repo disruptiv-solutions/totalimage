@@ -51,7 +51,22 @@ export default function Subscription() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [canceled, setCanceled] = useState(false);
   const [remainingSpots, setRemainingSpots] = useState(25); // This would normally be fetched from your backend
+
+  // Handle canceled checkout redirect
+  useEffect(() => {
+    if (router.query.canceled === 'true') {
+      setCanceled(true);
+      // Remove query params from URL
+      router.replace('/subscription', undefined, { shallow: true });
+      // Hide canceled message after 5 seconds
+      const timer = setTimeout(() => {
+        setCanceled(false);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [router.query]);
 
   const handleSubscribe = async () => {
     if (!user || !user.email) {
@@ -114,6 +129,14 @@ export default function Subscription() {
             </p>
           </div>
         </div>
+
+        {canceled && (
+          <div className="mt-8 max-w-md mx-auto">
+            <div className="rounded-lg bg-yellow-500/10 border border-yellow-500/20 p-4">
+              <div className="text-sm text-yellow-400">Checkout was canceled. You can try again anytime.</div>
+            </div>
+          </div>
+        )}
 
         {error && (
           <div className="mt-8 max-w-md mx-auto">
