@@ -142,7 +142,7 @@ const GalleryDetailPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-black w-full max-w-full overflow-x-hidden">
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-10 py-8 w-full">
-        <div className="grid grid-cols-1 gap-8 xl:gap-10 transition-all duration-300 w-full lg:grid-cols-[360px_1fr]">
+        <div className="grid grid-cols-1 gap-8 xl:gap-10 transition-all duration-300 w-full lg:grid-cols-[360px_1fr] lg:items-start">
           {/* Left Profile Panel */}
           <CharacterProfilePanel
             characterName={gallery.name}
@@ -153,7 +153,7 @@ const GalleryDetailPage: React.FC = () => {
           />
 
           {/* Main Content */}
-          <section className="relative">
+          <section className="relative lg:min-h-0">
             <div className="flex items-end justify-between gap-4 mb-6">
               <div>
                 <h2 className="text-2xl font-bold text-white">Galleries</h2>

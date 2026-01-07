@@ -19,7 +19,7 @@ export const CharacterProfilePanel = ({
   isLoading = false,
 }: CharacterProfilePanelProps) => {
   return (
-    <aside className="lg:sticky lg:top-24 h-fit transition-all duration-300 w-full lg:w-[360px]" aria-busy={isLoading}>
+    <aside className="lg:sticky lg:top-24 lg:self-start h-fit transition-all duration-300 w-full lg:w-[360px]" aria-busy={isLoading}>
       <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5 relative w-full max-w-full">
         <div className="flex items-center justify-between gap-4">
           {isLoading ? (
