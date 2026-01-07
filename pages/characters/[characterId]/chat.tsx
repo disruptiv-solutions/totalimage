@@ -89,9 +89,9 @@ const CharacterChatPage: React.FC = () => {
   const profileImageUrl = character?.profileImageUrl ?? null;
 
   return (
-    <div className="min-h-screen bg-black w-full max-w-full overflow-x-hidden">
-      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-10 py-8 w-full">
-        <div className="grid grid-cols-1 gap-8 xl:gap-10 transition-all duration-300 w-full lg:grid-cols-[360px_1fr]">
+    <div className="h-full flex flex-col bg-black w-full max-w-full overflow-x-hidden">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-10 py-8 w-full flex-1 flex flex-col min-h-0">
+        <div className="grid grid-cols-1 gap-8 xl:gap-10 transition-all duration-300 w-full lg:grid-cols-[360px_1fr] flex-1 min-h-0">
           <CharacterProfilePanel
             characterName={characterName}
             characterId={characterId ?? '/characters'}
@@ -101,8 +101,8 @@ const CharacterChatPage: React.FC = () => {
             isLoading={loading || !character}
           />
 
-          <section className="min-h-[70vh] relative">
-            <div className={`mb-6 transition-opacity duration-200 ${loading || !character ? 'opacity-60' : 'opacity-100'}`}>
+          <section className="flex flex-col min-h-0 relative">
+            <div className={`mb-6 transition-opacity duration-200 flex-shrink-0 ${loading || !character ? 'opacity-60' : 'opacity-100'}`}>
               <div className="text-sm text-neutral-400 mb-2">
                 <Link href="/characters" className="hover:text-[#4CAF50] transition-colors duration-200">
                   Characters
@@ -127,13 +127,13 @@ const CharacterChatPage: React.FC = () => {
             </div>
 
             {loading || !character ? (
-              <div className="bg-neutral-900/60 border border-neutral-800 rounded-xl p-4">
+              <div className="bg-neutral-900/60 border border-neutral-800 rounded-xl p-4 flex-1 flex flex-col">
                 <div className="h-6 w-40 bg-neutral-800 rounded animate-pulse mb-4" />
-                <div className="h-72 bg-neutral-800 rounded animate-pulse mb-4" />
+                <div className="flex-1 bg-neutral-800 rounded animate-pulse mb-4" />
                 <div className="h-12 bg-neutral-800 rounded animate-pulse" />
               </div>
             ) : (
-              <div className="h-[calc(100vh-12rem)]">
+              <div className="flex-1 flex flex-col min-h-0">
                 <CharacterChatThread characterName={characterName} />
               </div>
             )}

@@ -155,14 +155,14 @@ export const CharacterChatThread = ({
   };
 
   return (
-    <div className={`h-full flex flex-col ${className}`}>
+    <div className={`h-full flex flex-col min-h-0 ${className}`}>
       {error && (
-        <div className="mb-4 rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-red-300">
+        <div className="mb-4 rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-red-300 flex-shrink-0">
           {error}
         </div>
       )}
 
-      <div className="bg-neutral-900/90 backdrop-blur-sm rounded-xl p-4 flex-1 overflow-y-auto mb-4 flex flex-col-reverse border border-neutral-800">
+      <div className="bg-neutral-900/90 backdrop-blur-sm rounded-xl p-4 flex-1 overflow-y-auto mb-4 flex flex-col-reverse border border-neutral-800 min-h-0">
         <div className="flex flex-col w-full">
           {messages.map((msg, i) => (
             <div
@@ -201,7 +201,7 @@ export const CharacterChatThread = ({
         </div>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-shrink-0">
         <input
           type="text"
           value={message}
