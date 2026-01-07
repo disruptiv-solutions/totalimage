@@ -1,16 +1,7 @@
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/router';
 import ProtectedRoute from '../../components/ProtectedRoute';
-import { useAuth } from '../../contexts/AuthContext';
+import { AdminShell } from '../../components/admin/AdminShell';
 import { 
-  Home, 
-  Image, 
-  Users, 
-  FolderOpen, 
-  Sparkles,
-  ChevronLeft,
-  Menu,
   Settings,
   Search,
   Plus,
@@ -18,11 +9,6 @@ import {
   Loader,
   ExternalLink
 } from 'lucide-react';
-
-interface User {
-  email: string;
-  role?: string;
-}
 
 interface ReplicateModel {
   url: string;
@@ -69,8 +55,6 @@ interface SavedModel {
 }
 
 const ConfigPage: React.FC = () => {
-  const { user } = useAuth() as { user: User | null };
-  const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [directModelInput, setDirectModelInput] = useState('');
@@ -242,127 +226,11 @@ const ConfigPage: React.FC = () => {
     handleLoadCollection('text-to-image');
   }, []);
 
-  const navigationItems = [
-    {
-      name: 'Dashboard',
-      href: '/admin',
-      icon: Home,
-      description: 'Admin overview'
-    },
-    {
-      name: 'Upload Images',
-      href: '/admin/upload-images',
-      icon: Image,
-      description: 'Manage images'
-    },
-    {
-      name: 'Manage Users',
-      href: '/admin/manage-users',
-      icon: Users,
-      description: 'User accounts'
-    },
-    {
-      name: 'Manage Galleries',
-      href: '/admin/manage-galleries',
-      icon: FolderOpen,
-      description: 'Gallery organization'
-    },
-    {
-      name: 'Generate',
-      href: '/admin/generate',
-      icon: Sparkles,
-      description: 'Generate content'
-    },
-    {
-      name: 'Config',
-      href: '/admin/config',
-      icon: Settings,
-      description: 'AI model settings',
-      current: true
-    }
-  ];
-
   return (
     <ProtectedRoute requireAdmin>
-      <div className="min-h-screen bg-gray-100 flex">
-        {/* Sidebar */}
-        <aside
-          className={`${
-            sidebarOpen ? 'w-64' : 'w-20'
-          } bg-neutral-900 text-white transition-all duration-300 ease-in-out flex flex-col`}
-        >
-          {/* Sidebar Header */}
-          <div className="p-4 border-b border-neutral-800 flex items-center justify-between">
-            {sidebarOpen && (
-              <h1 className="text-xl font-bold">
-                Total<span className="text-[#4CAF50]">Toons34</span>
-              </h1>
-            )}
-            <button
-              onClick={handleToggleSidebar}
-              className="p-2 rounded-lg hover:bg-neutral-800 transition-colors duration-200"
-              aria-label={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
-              tabIndex={0}
-            >
-              {sidebarOpen ? (
-                <ChevronLeft className="h-5 w-5" />
-              ) : (
-                <Menu className="h-5 w-5" />
-              )}
-            </button>
-          </div>
-
-          {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-2">
-            {navigationItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = item.current;
-
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 ${
-                    isActive
-                      ? 'bg-[#4CAF50] text-white'
-                      : 'text-neutral-400 hover:bg-neutral-800 hover:text-white'
-                  }`}
-                  title={!sidebarOpen ? item.name : ''}
-                >
-                  <Icon className="h-5 w-5 flex-shrink-0" />
-                  {sidebarOpen && (
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{item.name}</p>
-                      <p className="text-xs opacity-70 truncate">{item.description}</p>
-                    </div>
-                  )}
-                </Link>
-              );
-            })}
-          </nav>
-
-          {/* User Info */}
-          {sidebarOpen && (
-            <div className="p-4 border-t border-neutral-800">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#4CAF50] flex items-center justify-center text-white font-semibold">
-                  {user?.email?.charAt(0).toUpperCase()}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white truncate">{user?.email}</p>
-                  <p className="text-xs text-neutral-400">Administrator</p>
-                </div>
-              </div>
-            </div>
-          )}
-        </aside>
-
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col">
-          {/* Content Area */}
-          <main className="flex-1 p-6 overflow-y-auto">
-            <div className="max-w-7xl mx-auto">
-              <h1 className="text-3xl font-bold text-gray-900 mb-6">AI Model Configuration</h1>
+      <AdminShell sidebarOpen={sidebarOpen} onToggleSidebar={handleToggleSidebar}>
+        <div className="max-w-7xl mx-auto">
+          <h1 className="text-3xl font-bold text-gray-900 mb-6">AI Model Configuration</h1>
 
               {/* Direct Add Section */}
               <div className="bg-white rounded-lg shadow p-6 mb-6">
@@ -580,10 +448,8 @@ const ConfigPage: React.FC = () => {
                   </div>
                 </div>
               </div>
-            </div>
-          </main>
         </div>
-      </div>
+      </AdminShell>
     </ProtectedRoute>
   );
 };

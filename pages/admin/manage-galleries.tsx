@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import ProtectedRoute from '../../components/ProtectedRoute';
 import { db, storage } from '../../lib/firebase';
+import { AdminShell } from '../../components/admin/AdminShell';
 import {
   collection,
   getDocs,
@@ -55,6 +56,7 @@ interface Gallery {
 
 const ManageGalleries: React.FC = () => {
   const router = useRouter();
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [galleries, setGalleries] = useState<Gallery[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
@@ -468,18 +470,26 @@ const ManageGalleries: React.FC = () => {
     }
   };
 
+  const handleToggleSidebar = () => {
+    setSidebarOpen((prev) => !prev);
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-      </div>
+      <ProtectedRoute requireAdmin>
+        <AdminShell sidebarOpen={sidebarOpen} onToggleSidebar={handleToggleSidebar} backgroundClassName="bg-gray-50">
+          <div className="flex items-center justify-center min-h-[60vh]">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900" />
+          </div>
+        </AdminShell>
+      </ProtectedRoute>
     );
   }
 
   return (
     <ProtectedRoute requireAdmin>
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      <AdminShell sidebarOpen={sidebarOpen} onToggleSidebar={handleToggleSidebar} backgroundClassName="bg-gray-50">
+      <div className="max-w-7xl mx-auto">
           {error && (
             <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
               <div className="flex items-center gap-2 text-red-800">
@@ -863,7 +873,7 @@ const ManageGalleries: React.FC = () => {
             </div>
           </div>
         )}
-      </div>
+    </AdminShell>
     </ProtectedRoute>
   );
 };

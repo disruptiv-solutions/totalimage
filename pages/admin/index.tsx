@@ -1,6 +1,8 @@
 import Link from 'next/link';
+import { useState } from 'react';
 import ProtectedRoute from '../../components/ProtectedRoute';
 import { useAuth } from '../../contexts/AuthContext';
+import { AdminShell } from '../../components/admin/AdminShell';
 
 interface User {
   email: string;
@@ -9,11 +11,16 @@ interface User {
 
 const AdminDashboard: React.FC = () => {
   const { user } = useAuth() as { user: User | null };
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  const handleToggleSidebar = () => {
+    setSidebarOpen((prev) => !prev);
+  };
 
   return (
     <ProtectedRoute requireAdmin>
-      <div className="min-h-screen bg-gray-100">
-        <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      <AdminShell sidebarOpen={sidebarOpen} onToggleSidebar={handleToggleSidebar}>
+        <div className="max-w-7xl mx-auto">
           <div className="px-4 py-6 sm:px-0">
             <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
             <p className="mt-2 text-gray-600">Welcome, {user?.email}</p>
@@ -71,7 +78,7 @@ const AdminDashboard: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
+      </AdminShell>
     </ProtectedRoute>
   );
 };

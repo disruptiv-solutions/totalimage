@@ -31,8 +31,11 @@ const routes = {
   // Admin only routes
   adminOnly: [
     '/admin',
-    '/admin/users',
-    '/admin/settings'
+    '/admin/upload-images',
+    '/admin/manage-users',
+    '/admin/manage-galleries',
+    '/admin/generate',
+    '/admin/config'
   ],
   // All other routes require both auth and subscription
   protected: true // Default for unlisted routes
@@ -81,6 +84,8 @@ function MyApp({ Component, pageProps }: AppProps) {
     return routes.public.includes(basePath);
   };
 
+  const isAdminRoute = router.pathname.startsWith('/admin');
+
   // Get requirements for current route
   const requirements = getRouteRequirements(router.pathname);
 
@@ -123,9 +128,13 @@ function MyApp({ Component, pageProps }: AppProps) {
       />
       <AuthProvider>
         <SubscriptionProvider>
-          <div className="min-h-screen flex flex-col bg-black overflow-x-hidden w-full max-w-full">
+          <div className="h-[100dvh] flex flex-col bg-black overflow-x-hidden w-full max-w-full">
             {!shouldHideNavigation() && <Navigation />}
-            <main className="flex-1 overflow-y-auto overflow-x-hidden w-full max-w-full">
+            <main
+              className={`flex-1 overflow-x-hidden w-full max-w-full ${
+                isAdminRoute ? 'overflow-hidden' : 'overflow-y-auto'
+              }`}
+            >
               {getPageContent()}
             </main>
             {/* Footer removed on global layout; pages can render their own footer */}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { Fragment, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { db } from '../../lib/firebase';
 import { 
@@ -16,6 +16,7 @@ import {
 import { AlertTriangle, UserX, User, Shield, X, ChevronDown, ChevronUp, CreditCard } from 'lucide-react';
 import ProtectedRoute from '../../components/ProtectedRoute';
 import { useAuth } from '../../contexts/AuthContext';
+import { AdminShell } from '../../components/admin/AdminShell';
 
 interface SubscriptionData {
   cancelAt: Timestamp | null;
@@ -44,6 +45,7 @@ interface UserData {
 
 const ManageUsers: React.FC = () => {
   const { user } = useAuth();
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
@@ -51,6 +53,10 @@ const ManageUsers: React.FC = () => {
   const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
+
+  const handleToggleSidebar = () => {
+    setSidebarOpen((prev) => !prev);
+  };
 
   useEffect(() => {
     if (user) {
@@ -198,16 +204,20 @@ const ManageUsers: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-      </div>
+      <ProtectedRoute requireAdmin>
+        <AdminShell sidebarOpen={sidebarOpen} onToggleSidebar={handleToggleSidebar} backgroundClassName="bg-gray-50">
+          <div className="flex items-center justify-center min-h-[60vh]">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900" />
+          </div>
+        </AdminShell>
+      </ProtectedRoute>
     );
   }
 
   return (
     <ProtectedRoute requireAdmin>
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      <AdminShell sidebarOpen={sidebarOpen} onToggleSidebar={handleToggleSidebar} backgroundClassName="bg-gray-50">
+        <div className="max-w-7xl mx-auto">
           {error && (
             <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
               <div className="flex items-center gap-2 text-red-800">
@@ -222,9 +232,7 @@ const ManageUsers: React.FC = () => {
             <div className="flex justify-between items-center">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">Manage Users</h1>
-                <p className="mt-1 text-sm text-gray-600">
-                  {users.length} users total
-                </p>
+                <p className="mt-1 text-sm text-gray-600">{users.length} users total</p>
               </div>
               <Link
                 href="/admin"
@@ -255,9 +263,8 @@ const ManageUsers: React.FC = () => {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {users.map((userData) => (
-                      <>
-                        <tr 
-                          key={userData.id}
+                      <Fragment key={userData.id}>
+                        <tr
                           className="hover:bg-gray-50 cursor-pointer"
                           onClick={() => toggleUserExpansion(userData.id)}
                         >
@@ -283,19 +290,19 @@ const ManageUsers: React.FC = () => {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <button
+                              type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleToggleAdminStatus(userData);
                               }}
                               disabled={userData.id === user?.uid || isProcessing}
                               className="inline-flex items-center"
+                              aria-label={userData.isAdmin ? 'Revoke admin' : 'Make admin'}
                             >
-                              <Shield className={`h-4 w-4 mr-1 ${
-                                userData.isAdmin ? 'text-blue-600' : 'text-gray-400'
-                              }`} />
-                              <span className="text-sm text-gray-900">
-                                {userData.isAdmin ? 'Admin' : 'User'}
-                              </span>
+                              <Shield
+                                className={`h-4 w-4 mr-1 ${userData.isAdmin ? 'text-blue-600' : 'text-gray-400'}`}
+                              />
+                              <span className="text-sm text-gray-900">{userData.isAdmin ? 'Admin' : 'User'}</span>
                             </button>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -303,6 +310,7 @@ const ManageUsers: React.FC = () => {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <button
+                              type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setSelectedUser(userData);
@@ -310,6 +318,7 @@ const ManageUsers: React.FC = () => {
                               }}
                               disabled={userData.id === user?.uid || isProcessing}
                               className="text-red-600 hover:text-red-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                              aria-label={`Delete ${userData.email}`}
                             >
                               Delete
                             </button>
@@ -335,11 +344,15 @@ const ManageUsers: React.FC = () => {
                                     </div>
                                     <div>
                                       <p className="text-sm font-medium text-gray-500">Current Period Start</p>
-                                      <p className="text-sm text-gray-900">{formatDate(userData.subscription.currentPeriodStart)}</p>
+                                      <p className="text-sm text-gray-900">
+                                        {formatDate(userData.subscription.currentPeriodStart)}
+                                      </p>
                                     </div>
                                     <div>
                                       <p className="text-sm font-medium text-gray-500">Current Period End</p>
-                                      <p className="text-sm text-gray-900">{formatDate(userData.subscription.currentPeriodEnd)}</p>
+                                      <p className="text-sm text-gray-900">
+                                        {formatDate(userData.subscription.currentPeriodEnd)}
+                                      </p>
                                     </div>
                                     <div>
                                       <p className="text-sm font-medium text-gray-500">Created At</p>
@@ -347,7 +360,9 @@ const ManageUsers: React.FC = () => {
                                     </div>
                                     <div>
                                       <p className="text-sm font-medium text-gray-500">Cancel At Period End</p>
-                                      <p className="text-sm text-gray-900">{userData.subscription.cancelAtPeriodEnd ? 'Yes' : 'No'}</p>
+                                      <p className="text-sm text-gray-900">
+                                        {userData.subscription.cancelAtPeriodEnd ? 'Yes' : 'No'}
+                                      </p>
                                     </div>
                                     <div>
                                       <p className="text-sm font-medium text-gray-500">Stripe Customer ID</p>
@@ -365,62 +380,65 @@ const ManageUsers: React.FC = () => {
                             </td>
                           </tr>
                         )}
-                      </>
+                      </Fragment>
                     ))}
                   </tbody>
                 </table>
               </div>
 
-                {users.length === 0 && (
-                  <div className="text-center py-12">
-                    <UserX className="mx-auto h-12 w-12 text-gray-400" />
-                    <h3 className="mt-2 text-sm font-medium text-gray-900">No users found</h3>
-                    <p className="mt-1 text-sm text-gray-500">Get started by inviting new users.</p>
-                  </div>
-                )}
+              {users.length === 0 && (
+                <div className="text-center py-12">
+                  <UserX className="mx-auto h-12 w-12 text-gray-400" />
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">No users found</h3>
+                  <p className="mt-1 text-sm text-gray-500">No user accounts were returned.</p>
                 </div>
-                </div>
-                </div>
+              )}
+            </div>
+          </div>
+        </div>
 
-                {/* Delete User Modal */}
-                {showDeleteModal && selectedUser && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                <div className="bg-white rounded-lg max-w-md w-full p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-semibold text-gray-900">Delete User</h2>
-                  <button
-                    onClick={() => setShowDeleteModal(false)}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-                <p className="text-gray-600 mb-4">
-                  Are you sure you want to delete the user "{selectedUser.firstName} {selectedUser.lastName}"? 
-                  This action cannot be undone.
-                </p>
-                <div className="flex justify-end gap-4">
-                  <button
-                    onClick={() => setShowDeleteModal(false)}
-                    className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
-                    disabled={isProcessing}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={() => handleDeleteUser(selectedUser)}
-                    className="px-4 py-2 text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors disabled:opacity-50"
-                    disabled={isProcessing}
-                  >
-                    {isProcessing ? 'Deleting...' : 'Delete User'}
-                  </button>
-                </div>
-                </div>
-                </div>
-                )}
-                </div>
-                </ProtectedRoute>
-                );
-                };
+        {showDeleteModal && selectedUser && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg max-w-md w-full p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold text-gray-900">Delete User</h2>
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                  aria-label="Close delete modal"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <p className="text-gray-600 mb-4">
+                Are you sure you want to delete the user &quot;{selectedUser.firstName} {selectedUser.lastName}&quot;?
+                This action cannot be undone.
+              </p>
+              <div className="flex justify-end gap-4">
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteModal(false)}
+                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+                  disabled={isProcessing}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDeleteUser(selectedUser)}
+                  className="px-4 py-2 text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors disabled:opacity-50"
+                  disabled={isProcessing}
+                >
+                  {isProcessing ? 'Deleting...' : 'Delete User'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </AdminShell>
+    </ProtectedRoute>
+  );
+};
 
-                export default ManageUsers;
+export default ManageUsers;

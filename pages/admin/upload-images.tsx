@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useAuth } from '../../contexts/AuthContext';
 import ProtectedRoute from '../../components/ProtectedRoute';
 import { storage, db } from '../../lib/firebase';
+import { AdminShell } from '../../components/admin/AdminShell';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import {
   collection,
@@ -40,6 +41,7 @@ export interface Gallery {
 
 const UploadImages: React.FC = () => {
   const { user } = useAuth();
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [selectedFiles, setSelectedFiles] = useState<UploadFile[]>([]);
   const [uploading, setUploading] = useState<boolean>(false);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
@@ -51,6 +53,10 @@ const UploadImages: React.FC = () => {
   const [newGalleryName, setNewGalleryName] = useState<string>('');
   const [newSetName, setNewSetName] = useState<string>('');
   const [error, setError] = useState<string>('');
+
+  const handleToggleSidebar = () => {
+    setSidebarOpen((prev) => !prev);
+  };
 
   useEffect(() => {
     if (!user?.uid) return;
@@ -250,9 +256,9 @@ const UploadImages: React.FC = () => {
   };
 
   return (
-    <ProtectedRoute>
-      <div className="min-h-screen bg-gray-100">
-        <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <ProtectedRoute requireAdmin>
+      <AdminShell sidebarOpen={sidebarOpen} onToggleSidebar={handleToggleSidebar} backgroundClassName="bg-gray-100">
+        <div className="max-w-7xl mx-auto">
           <div className="px-4 py-6 sm:px-0">
             <div className="flex justify-between items-center">
               <h1 className="text-3xl font-bold text-gray-900">Upload Images</h1>
@@ -489,7 +495,7 @@ const UploadImages: React.FC = () => {
             </div>
           </div>
         )}
-      </div>
+      </AdminShell>
     </ProtectedRoute>
   );
 };

@@ -1,17 +1,11 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/router';
 import ProtectedRoute from '../../components/ProtectedRoute';
 import { useAuth } from '../../contexts/AuthContext';
+import { AdminShell } from '../../components/admin/AdminShell';
 import { 
-  Home, 
-  Image, 
-  Users, 
-  FolderOpen, 
   Sparkles,
-  ChevronLeft,
   ChevronDown,
-  Menu,
   X,
   Settings,
   Loader,
@@ -76,12 +70,9 @@ interface ImageData {
 
 const GeneratePage: React.FC = () => {
   const { user } = useAuth() as { user: User | null };
-  const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(true);
-  const rootRef = useRef<HTMLDivElement | null>(null);
   const chatMessagesRef = useRef<HTMLDivElement | null>(null);
-  const [viewportHeight, setViewportHeight] = useState<number | undefined>(undefined);
   const generationAbortController = useRef<AbortController | null>(null);
   // Sessions toggle + data
   const [showSessions, setShowSessions] = useState(false);
@@ -1109,23 +1100,6 @@ const GeneratePage: React.FC = () => {
     loadModels();
   }, []);
 
-  // Fit the entire shell (sidebar + drawer + main) to the visible viewport
-  useEffect(() => {
-    const recalc = () => {
-      if (!rootRef.current) return;
-      const top = rootRef.current.getBoundingClientRect().top;
-      const h = Math.max(0, Math.round(window.innerHeight - top));
-      setViewportHeight(h);
-    };
-    recalc();
-    window.addEventListener('resize', recalc);
-    window.addEventListener('orientationchange', recalc);
-    return () => {
-      window.removeEventListener('resize', recalc);
-      window.removeEventListener('orientationchange', recalc);
-    };
-  }, []);
-
   // Load ComfyUI dynamic options (checkpoints, loras)
   useEffect(() => {
     const loadOptions = async () => {
@@ -1200,129 +1174,21 @@ const GeneratePage: React.FC = () => {
     }
   }, [showSystemPromptDropdown]);
 
-  const navigationItems = [
-    {
-      name: 'Dashboard',
-      href: '/admin',
-      icon: Home,
-      description: 'Admin overview'
-    },
-    {
-      name: 'Upload Images',
-      href: '/admin/upload-images',
-      icon: Image,
-      description: 'Manage images'
-    },
-    {
-      name: 'Manage Users',
-      href: '/admin/manage-users',
-      icon: Users,
-      description: 'User accounts'
-    },
-    {
-      name: 'Manage Galleries',
-      href: '/admin/manage-galleries',
-      icon: FolderOpen,
-      description: 'Gallery organization'
-    },
-    {
-      name: 'Generate',
-      href: '/admin/generate',
-      icon: Sparkles,
-      description: 'Generate content',
-      current: true
-    },
-    {
-      name: 'Config',
-      href: '/admin/config',
-      icon: Settings,
-      description: 'AI model settings'
-    }
-  ];
-
   return (
     <ProtectedRoute requireAdmin>
-      <div ref={rootRef} className="h-full overflow-hidden bg-gray-100 flex items-stretch">
-        {/* Sidebar */}
-        <aside
-          className={`${
-            sidebarOpen ? 'w-64' : 'w-20'
-          } bg-neutral-900 text-white transition-all duration-300 ease-in-out flex flex-col h-full overflow-hidden flex-shrink-0`}
-        >
-          {/* Sidebar Header */}
-          <div className="p-4 border-b border-neutral-800 flex items-center justify-between">
-            {sidebarOpen && (
-              <h1 className="text-xl font-bold">
-                Total<span className="text-[#4CAF50]">Toons34</span>
-              </h1>
-            )}
-            <button
-              onClick={handleToggleSidebar}
-              className="p-2 rounded-lg hover:bg-neutral-800 transition-colors duration-200"
-              aria-label={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
-              tabIndex={0}
+      <AdminShell
+        sidebarOpen={sidebarOpen}
+        onToggleSidebar={handleToggleSidebar}
+        leftPanel={
+          <>
+            <aside
+              className={`${
+                drawerOpen ? (sidebarOpen ? 'w-[32rem]' : 'w-[10rem]') : 'w-0'
+              } bg-white border-r border-gray-200 transition-all duration-300 ease-in-out flex flex-col overflow-hidden h-full flex-shrink-0`}
+              aria-label="Generation drawer"
             >
-              {sidebarOpen ? (
-                <ChevronLeft className="h-5 w-5" />
-              ) : (
-                <Menu className="h-5 w-5" />
-              )}
-            </button>
-          </div>
-
-          {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-            {navigationItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = item.current;
-
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 ${
-                    isActive
-                      ? 'bg-[#4CAF50] text-white'
-                      : 'text-neutral-400 hover:bg-neutral-800 hover:text-white'
-                  }`}
-                  title={!sidebarOpen ? item.name : ''}
-                >
-                  <Icon className="h-5 w-5 flex-shrink-0" />
-                  {sidebarOpen && (
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{item.name}</p>
-                      <p className="text-xs opacity-70 truncate">{item.description}</p>
-                    </div>
-                  )}
-                </Link>
-              );
-            })}
-          </nav>
-
-          {/* User Info */}
-          {sidebarOpen && (
-            <div className="p-4 border-t border-neutral-800">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#4CAF50] flex items-center justify-center text-white font-semibold">
-                  {user?.email?.charAt(0).toUpperCase()}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white truncate">{user?.email}</p>
-                  <p className="text-xs text-neutral-400">Administrator</p>
-                </div>
-              </div>
-            </div>
-          )}
-        </aside>
-
-        {/* Image Generation Drawer */}
-        <aside
-          className={`${
-            drawerOpen ? (sidebarOpen ? 'w-[32rem]' : 'w-[10rem]') : 'w-0'
-          } bg-white border-r border-gray-200 transition-all duration-300 ease-in-out flex flex-col overflow-hidden h-full flex-shrink-0`}
-        >
-          {drawerOpen && (
-            <>
+              {drawerOpen && (
+                <>
               {/* Drawer Header */}
               <div className="flex-shrink-0 p-4 border-b border-gray-200 flex items-start gap-3">
                 {/* Sessions Pill */}
@@ -2003,27 +1869,25 @@ const GeneratePage: React.FC = () => {
                 </div>
               </div>
               )}
-            </>
-          )}
-        </aside>
+                </>
+              )}
+            </aside>
 
-        {/* Toggle Drawer Button (when drawer is closed) */}
-        {!drawerOpen && (
-          <button
-            onClick={handleToggleDrawer}
-            className="fixed left-20 top-1/2 transform -translate-y-1/2 bg-[#4CAF50] text-white p-3 rounded-r-lg shadow-lg hover:bg-[#45a049] transition-all duration-200 z-10"
-            aria-label="Open drawer"
-            tabIndex={0}
-          >
-            <Sparkles className="h-5 w-5" />
-          </button>
-        )}
-
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col min-h-0">
-          {/* Content Area */}
-          <main className="flex-1 p-6 overflow-y-auto">
-            <div className="max-w-7xl mx-auto">
+            {!drawerOpen && (
+              <button
+                type="button"
+                onClick={handleToggleDrawer}
+                className="fixed left-20 top-1/2 -translate-y-1/2 bg-[#4CAF50] text-white p-3 rounded-r-lg shadow-lg hover:bg-[#45a049] transition-all duration-200 z-10 focus:outline-none focus:ring-2 focus:ring-[#4CAF50]"
+                aria-label="Open drawer"
+                tabIndex={0}
+              >
+                <Sparkles className="h-5 w-5" />
+              </button>
+            )}
+          </>
+        }
+      >
+        <div className="max-w-7xl mx-auto">
               {generatedImages.length === 0 ? (
                 <div className="bg-white rounded-lg shadow p-6 text-center">
                   <Sparkles className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -2167,29 +2031,58 @@ const GeneratePage: React.FC = () => {
                   })}
                 </div>
               )}
-            </div>
-          </main>
-          {lightboxOpen && generatedImages.length > 0 && (
-            <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center">
-              <button onClick={closeLightbox} className="absolute top-4 right-4 text-white text-2xl" aria-label="Close">×</button>
-              <button onClick={showPrev} className="absolute left-4 top-1/2 -translate-y-1/2 text-white text-2xl" aria-label="Previous">‹</button>
-              <button onClick={showNext} className="absolute right-4 top-1/2 -translate-y-1/2 text-white text-2xl" aria-label="Next">›</button>
-              <img src={generatedImages[lightboxIndex]?.downloadUrl || generatedImages[lightboxIndex]?.signedUrl || ''} alt="Full size" className="max-w-[95vw] max-h-[90vh] object-contain" />
-            </div>
-          )}
-          {/* Page Footer (spans under main content, not under sidebar/drawer) */}
-          <footer className="flex-shrink-0 border-t border-gray-200 bg-white">
-            <div className="max-w-7xl mx-auto px-6 py-3 text-xs text-gray-600 flex flex-col sm:flex-row items-center justify-between gap-2">
-              <div>© 2025 TotalToons34. All rights reserved.</div>
-              <div className="flex items-center gap-4">
-                <Link href="/terms" className="hover:text-gray-900">Terms of Service</Link>
-                <Link href="/privacy" className="hover:text-gray-900">Privacy Policy</Link>
-                <Link href="/contact" className="hover:text-gray-900">Contact Us</Link>
-              </div>
-            </div>
-          </footer>
         </div>
-      </div>
+        {lightboxOpen && generatedImages.length > 0 && (
+          <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center">
+            <button
+              type="button"
+              onClick={closeLightbox}
+              className="absolute top-4 right-4 text-white text-2xl"
+              aria-label="Close"
+            >
+              ×
+            </button>
+            <button
+              type="button"
+              onClick={showPrev}
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-white text-2xl"
+              aria-label="Previous"
+            >
+              ‹
+            </button>
+            <button
+              type="button"
+              onClick={showNext}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-white text-2xl"
+              aria-label="Next"
+            >
+              ›
+            </button>
+            <img
+              src={generatedImages[lightboxIndex]?.downloadUrl || generatedImages[lightboxIndex]?.signedUrl || ''}
+              alt="Full size"
+              className="max-w-[95vw] max-h-[90vh] object-contain"
+            />
+          </div>
+        )}
+
+        <footer className="mt-6 border-t border-gray-200 bg-white rounded-lg overflow-hidden">
+          <div className="max-w-7xl mx-auto px-6 py-3 text-xs text-gray-600 flex flex-col sm:flex-row items-center justify-between gap-2">
+            <div>© 2025 TotalToons34. All rights reserved.</div>
+            <div className="flex items-center gap-4">
+              <Link href="/terms" className="hover:text-gray-900">
+                Terms of Service
+              </Link>
+              <Link href="/privacy" className="hover:text-gray-900">
+                Privacy Policy
+              </Link>
+              <Link href="/contact" className="hover:text-gray-900">
+                Contact Us
+              </Link>
+            </div>
+          </div>
+        </footer>
+      </AdminShell>
     </ProtectedRoute>
   );
 };
