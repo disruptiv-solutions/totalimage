@@ -1,24 +1,68 @@
-Welcome to the NextJS base template bootstrapped using the `create-next-app`. This template supports TypeScript, but you can use normal JavaScript as well.
+# TotalToons34
+
+A Next.js application for character galleries and AI chat interactions.
+
+## Features
+
+- Character gallery browsing with image sets
+- AI-powered character chat conversations
+- User authentication and subscription management
+- Admin panel for content management
+- Image generation and gallery management
+
+## Tech Stack
+
+- **Framework**: Next.js 14
+- **Language**: TypeScript
+- **Styling**: TailwindCSS
+- **Database**: Firebase Firestore
+- **Authentication**: Firebase Auth
+- **Storage**: Firebase Storage
+- **Payments**: Stripe
+- **AI**: OpenAI (via OpenRouter)
 
 ## Getting Started
 
-Hit the run button to start the development server.
+1. Install dependencies:
+```bash
+npm install
+```
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+2. Set up environment variables in `.env.local`:
+```
+NEXT_PUBLIC_FIREBASE_API_KEY=...
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=...
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=...
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=...
+FIREBASE_ADMIN_PROJECT_ID=...
+FIREBASE_ADMIN_CLIENT_EMAIL=...
+FIREBASE_ADMIN_PRIVATE_KEY=...
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=...
+STRIPE_SECRET_KEY=...
+OPENROUTER_API_KEY=...
+NEXT_PUBLIC_ADMIN_UID=...
+```
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on `/api/hello`. This endpoint can be edited in `pages/api/hello.ts`.
+3. Run the development server:
+```bash
+npm run dev
+```
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+4. Build for production:
+```bash
+npm run build
+npm start
+```
 
-## Learn More
+## Project Structure
 
-To learn more about Next.js, take a look at the following resources:
+- `/pages` - Next.js pages and API routes
+- `/components` - React components
+- `/lib` - Utility libraries (Firebase, Stripe, etc.)
+- `/contexts` - React context providers
+- `/hooks` - Custom React hooks
+- `/public` - Static assets
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## License
 
-## Productionizing your Next App
-
-To make your next App run smoothly in production make sure to deploy your project with [Repl Deployments](https://docs.replit.com/hosting/deployments/about-deployments)!
-
-You can also produce a production build by running `npm run build` and [changing the run command](https://docs.replit.com/programming-ide/configuring-repl#run) to `npm run start`.
+Private repository - All rights reserved
