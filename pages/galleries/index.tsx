@@ -90,8 +90,10 @@ const GalleryCard: React.FC<GalleryCardProps> = ({ gallery, formatDate }) => {
     };
   }, [gallery.allImages.length, startTransition, scheduleNextImage]);
 
-  const currentImage = gallery.allImages[currentImageIndex];
-  const nextImage = nextImageIndex !== null ? gallery.allImages[nextImageIndex] : null;
+  const currentImage = gallery.allImages.length > 0 && currentImageIndex < gallery.allImages.length 
+    ? gallery.allImages[currentImageIndex] 
+    : gallery.allImages[0] || null;
+  const nextImage = nextImageIndex !== null && nextImageIndex < gallery.allImages.length ? gallery.allImages[nextImageIndex] : null;
 
   return (
     <Link
@@ -100,8 +102,8 @@ const GalleryCard: React.FC<GalleryCardProps> = ({ gallery, formatDate }) => {
       aria-label={`View character ${gallery.name}`}
     >
       <div className="relative">
-        {gallery.allImages.length > 0 ? (
-          <div className="aspect-w-1 aspect-h-1 relative">
+        {gallery.allImages.length > 0 && currentImage ? (
+          <div className="relative w-full" style={{ paddingBottom: '100%' }}>
             {/* Current Image */}
             <img
               key={`current-${currentImage.id}`}
@@ -124,8 +126,10 @@ const GalleryCard: React.FC<GalleryCardProps> = ({ gallery, formatDate }) => {
             )}
           </div>
         ) : (
-          <div className="aspect-w-1 aspect-h-1 bg-neutral-800 flex items-center justify-center">
-            <FolderOpen className="w-12 h-12 text-neutral-600" />
+          <div className="relative w-full bg-neutral-800 flex items-center justify-center" style={{ paddingBottom: '100%' }}>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <FolderOpen className="w-12 h-12 text-neutral-600" />
+            </div>
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
