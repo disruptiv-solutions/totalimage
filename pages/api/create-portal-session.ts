@@ -7,7 +7,7 @@ if (!process.env.STRIPE_SECRET_KEY) {
 }
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2025-01-27.acacia',
+  apiVersion: '2025-02-24.acacia',
 });
 
 export default async function handler(
@@ -35,7 +35,7 @@ export default async function handler(
     const subscriptionQuery = await adminDb
       .collection('users')
       .doc(userId)
-      .collection('subscription')
+      .collection('subscriptions')
       .limit(1)
       .get();
 
