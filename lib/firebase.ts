@@ -13,32 +13,33 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
 };
 
-// Only initialize Firebase if config is valid and we're not in build mode
-const isConfigValid = firebaseConfig.apiKey && 
-                      firebaseConfig.authDomain && 
-                      firebaseConfig.projectId;
+// Only initialize Firebase if config is valid
+const isConfigValid =
+  Boolean(firebaseConfig.apiKey) &&
+  Boolean(firebaseConfig.authDomain) &&
+  Boolean(firebaseConfig.projectId);
 
-let app: FirebaseApp | undefined;
-let auth: Auth | undefined;
-let db: Firestore | undefined;
-let storage: FirebaseStorage | undefined;
+let app: FirebaseApp | null = null;
+let auth: Auth | null = null;
+let db: Firestore | null = null;
+let storage: FirebaseStorage | null = null;
 
-if (isConfigValid && typeof window !== 'undefined') {
-  // Only initialize on client side
-  app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-  auth = getAuth(app);
-  db = getFirestore(app);
-  storage = getStorage(app);
-} else if (isConfigValid) {
-  // Server-side: initialize only if config is valid
+if (isConfigValid) {
   try {
     app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
     auth = getAuth(app);
     db = getFirestore(app);
     storage = getStorage(app);
   } catch (error) {
-    // Silently fail during build if env vars aren't set
-    console.warn('Firebase initialization skipped:', error instanceof Error ? error.message : 'Unknown error');
+    // Avoid crashing builds / runtime when env vars are missing or invalid.
+    console.warn(
+      'Firebase initialization skipped:',
+      error instanceof Error ? error.message : 'Unknown error'
+    );
+    app = null;
+    auth = null;
+    db = null;
+    storage = null;
   }
 }
 

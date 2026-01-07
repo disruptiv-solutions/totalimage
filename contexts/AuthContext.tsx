@@ -79,9 +79,11 @@ export function useProtectedRoute() {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [firebaseUnavailable, setFirebaseUnavailable] = useState(false);
 
   const getUserProfile = async (userId: string): Promise<UserProfile | null> => {
     try {
+      if (!db) return null;
       const userDoc = await getDoc(doc(db, 'users', userId));
       if (userDoc.exists()) {
         return userDoc.data() as UserProfile;
@@ -94,6 +96,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
+    // If Firebase auth isn't configured, don't crash the app — just behave as logged out.
+    if (!auth) {
+      setFirebaseUnavailable(true);
+      setUser(null);
+      setLoading(false);
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       console.log('Auth state changed:', user ? `User logged in: ${user.uid}` : 'No user');
       setUser(user);
@@ -109,6 +119,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     userData: SignupData
   ): Promise<User> => {
     try {
+      if (!auth || !db) {
+        throw new Error('Firebase is not configured. Please set the NEXT_PUBLIC_FIREBASE_* environment variables.');
+      }
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const { user } = userCredential;
 
@@ -144,6 +157,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string): Promise<User> => {
     try {
+      if (!auth) {
+        throw new Error('Firebase is not configured. Please set the NEXT_PUBLIC_FIREBASE_* environment variables.');
+      }
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       setUser(userCredential.user);
       return userCredential.user;
@@ -155,6 +171,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
+      if (!auth) {
+        setUser(null);
+        return;
+      }
       await signOut(auth);
       setUser(null);
     } catch (error) {
@@ -165,6 +185,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const resetPassword = async (email: string) => {
     try {
+      if (!auth) {
+        throw new Error('Firebase is not configured. Please set the NEXT_PUBLIC_FIREBASE_* environment variables.');
+      }
       await sendPasswordResetEmail(auth, email);
     } catch (error) {
       console.error('Password reset error:', error);
@@ -184,7 +207,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {!loading && (
+        <>
+          {firebaseUnavailable && (
+            <div className="w-full bg-yellow-500/10 border-b border-yellow-500/20 text-yellow-200 text-sm px-4 py-2">
+              Firebase auth is not configured. Set `NEXT_PUBLIC_FIREBASE_*` in Vercel to enable sign-in.
+            </div>
+          )}
+          {children}
+        </>
+      )}
     </AuthContext.Provider>
   );
 }

@@ -7,6 +7,14 @@ function Home() {
   const { user, loading: authLoading } = useAuth();
   const galleries = useGalleryCounts();
 
+  const getCharacterChatHref = (characterName: string) => {
+    const matchedGallery = galleries.find(
+      (g) => (g.name ?? '').toLowerCase() === characterName.toLowerCase()
+    );
+    const characterId = matchedGallery?.id ?? characterName;
+    return `/characters/${encodeURIComponent(characterId)}/chat`;
+  };
+
   const totalGalleries = galleries.length;
   const totalSets = galleries.reduce((acc, gal) => acc + gal.setCount, 0);
   const totalImages = galleries.reduce(
@@ -177,7 +185,7 @@ function Home() {
             ].map((c) => (
               <Link
                 key={c.name}
-                href={`/chat/${encodeURIComponent(c.name)}`}
+                href={getCharacterChatHref(c.name)}
                 aria-label={`Chat with ${c.name}`}
                 className="group relative rounded-2xl overflow-hidden border border-neutral-800 bg-neutral-900 hover:border-[#4CAF50]/40 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#4CAF50]"
               >

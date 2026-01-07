@@ -27,6 +27,11 @@ export function useGalleryCounts(): Gallery[] {
   const [galleries, setGalleries] = useState<Gallery[]>([]);
 
   useEffect(() => {
+    if (!db) {
+      console.error('Firestore is not initialized (missing NEXT_PUBLIC_FIREBASE_* env vars)');
+      return;
+    }
+
     const adminUid = process.env.NEXT_PUBLIC_ADMIN_UID;
     if (!adminUid) {
       console.error('NEXT_PUBLIC_ADMIN_UID is not set');
