@@ -36,7 +36,10 @@ interface GalleryCardProps {
 
 const GalleryCard: React.FC<GalleryCardProps> = ({ gallery, formatDate }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
+  const [displayImageIndex, setDisplayImageIndex] = useState<number>(0);
+  const [fadeOpacity, setFadeOpacity] = useState<number>(1);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const fadeTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const scheduleNextImage = useCallback(() => {
     if (gallery.allImages.length <= 1) return;
@@ -72,10 +75,30 @@ const GalleryCard: React.FC<GalleryCardProps> = ({ gallery, formatDate }) => {
     }, initialDelay);
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
+      if (fadeTimerRef.current) clearTimeout(fadeTimerRef.current);
     };
   }, [gallery.allImages.length, scheduleNextImage]);
 
-  const currentImage = gallery.allImages[currentImageIndex];
+  // Handle smooth fade transition when image index changes
+  useEffect(() => {
+    if (currentImageIndex !== displayImageIndex && gallery.allImages.length > 1) {
+      // Start fade out
+      setFadeOpacity(0);
+      // After fade out completes, switch image and fade in
+      fadeTimerRef.current = setTimeout(() => {
+        setDisplayImageIndex(currentImageIndex);
+        // Trigger fade in
+        requestAnimationFrame(() => {
+          setFadeOpacity(1);
+        });
+      }, 400); // Half of transition duration for fade out
+      return () => {
+        if (fadeTimerRef.current) clearTimeout(fadeTimerRef.current);
+      };
+    }
+  }, [currentImageIndex, displayImageIndex, gallery.allImages.length]);
+
+  const displayImage = gallery.allImages[displayImageIndex];
 
   return (
     <Link
@@ -85,12 +108,13 @@ const GalleryCard: React.FC<GalleryCardProps> = ({ gallery, formatDate }) => {
     >
       <div className="relative">
         {gallery.allImages.length > 0 ? (
-          <div className="aspect-w-1 aspect-h-1">
+          <div className="aspect-w-1 aspect-h-1 relative">
             <img
-              key={currentImage.id}
-              src={currentImage.url}
-              alt={currentImage.name}
-              className="w-full h-full object-cover object-top transition-opacity duration-700 ease-in-out"
+              key={displayImage.id}
+              src={displayImage.url}
+              alt={displayImage.name}
+              className="absolute inset-0 w-full h-full object-cover object-top transition-opacity duration-800 ease-in-out"
+              style={{ opacity: fadeOpacity }}
             />
           </div>
         ) : (

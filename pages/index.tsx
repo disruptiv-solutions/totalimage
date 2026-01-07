@@ -189,7 +189,7 @@ function Home() {
                 aria-label={`Chat with ${c.name}`}
                 className="group relative rounded-2xl overflow-hidden border border-neutral-800 bg-neutral-900 hover:border-[#4CAF50]/40 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#4CAF50]"
               >
-                <div className="relative aspect-video bg-neutral-800 overflow-hidden">
+                <div className="relative aspect-w-1 aspect-h-1 bg-neutral-800 overflow-hidden">
                   <img
                     src={c.image}
                     alt={`Chat with ${c.name}`}
@@ -224,7 +224,7 @@ function Home() {
                   href={`/characters/${set.galleryId}/galleries/${set.id}`}
                   className="group cursor-pointer rounded-xl overflow-hidden border border-neutral-800 bg-neutral-900 hover:border-[#4CAF50]/50 transition-all duration-200 flex flex-col"
                 >
-                  <div className="relative w-full pt-[56.25%] overflow-hidden bg-neutral-800">
+                  <div className="relative w-full aspect-w-1 aspect-h-1 overflow-hidden bg-neutral-800">
                     {set.coverPhoto ? (
                       <>
                         <img
@@ -257,7 +257,7 @@ function Home() {
               href="/characters"
               className="group cursor-pointer rounded-xl overflow-hidden border border-neutral-800 bg-neutral-900 hover:border-[#4CAF50]/50 transition-all duration-200 flex flex-col"
             >
-              <div className="relative w-full pt-[56.25%] bg-neutral-800/50">
+              <div className="relative w-full aspect-w-1 aspect-h-1 bg-neutral-800/50">
                 <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
                   <div className="w-16 h-16 bg-[#4CAF50]/10 rounded-full flex items-center justify-center mb-4 group-hover:bg-[#4CAF50]/20 transition-colors duration-200">
                     <Camera className="w-8 h-8 text-[#4CAF50]" />
