@@ -123,9 +123,9 @@ function MyApp({ Component, pageProps }: AppProps) {
       />
       <AuthProvider>
         <SubscriptionProvider>
-          <div className="h-screen overflow-hidden flex flex-col bg-black">
+          <div className="min-h-screen flex flex-col bg-black overflow-x-hidden">
             {!shouldHideNavigation() && <Navigation />}
-            <main className="flex-grow overflow-hidden">
+            <main className="flex-1 overflow-y-auto overflow-x-hidden">
               {getPageContent()}
             </main>
             {/* Footer removed on global layout; pages can render their own footer */}

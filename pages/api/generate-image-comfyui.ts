@@ -132,6 +132,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.log(`[ComfyUI API] Could not get checkpoint info: ${e}`);
     }
 
+    // Polling config
+    const pollIntervalMs = 500;
+    const timeoutMs = 240_000; // allow longer first-run loads
+    const stuckRunningPollThreshold = Math.floor((timeoutMs / pollIntervalMs) * 0.75); // ~180s
+    const stuckPendingPollThreshold = Math.floor((timeoutMs / pollIntervalMs) * 0.5);  // ~120s
+
     // ---- Build workflow based on the working HTML example
     const seedValue = Number.isFinite(settings?.seed as number) && (settings?.seed as number) >= 0 
       ? (settings?.seed as number) 
@@ -309,7 +315,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // ---- Poll history for completion
     const started = Date.now();
-    const timeoutMs = 120_000;
     let pollCount = 0;
 
     while (true) {
@@ -318,7 +323,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       
       if (elapsed > timeoutMs) {
         console.error(`[ComfyUI API] Timeout after ${elapsed}ms (${pollCount} polls)`);
-        return res.status(504).json({ error: 'Timed out waiting for ComfyUI result' });
+        return res.status(504).json({ error: 'Timed out waiting for ComfyUI result', promptId });
       }
 
       console.log(`[ComfyUI API] Poll ${pollCount}: checking history for ${promptId} (${elapsed}ms elapsed)`);
@@ -366,7 +371,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               console.log(`[ComfyUI API] Poll ${pollCount}: Queue status - Running: ${isRunning}, Pending: ${isPending}`);
               
               // Check if there's a stuck prompt that's been running for too long
-              if (queueRunning.length > 0 && pollCount > 60) {
+              if (queueRunning.length > 0 && pollCount > stuckRunningPollThreshold) {
                 const runningPrompt = queueRunning[0];
                 const runningPromptId = runningPrompt[1];
                 console.warn(`[ComfyUI API] Poll ${pollCount}: Detected potential stuck prompt ${runningPromptId} in queue_running - this may be blocking new prompts`);
@@ -376,7 +381,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               console.log(`[ComfyUI API] Poll ${pollCount}: Queue summary - Running: ${queueRunning.length}, Pending: ${queuePending.length}`);
               
               // Check if our prompt is stuck in running state for too long (likely execution error)
-              if (isRunning && pollCount > 120) { // ~60s at 500ms interval
+              if (isRunning && pollCount > stuckRunningPollThreshold) {
                 console.error(`[ComfyUI API] Poll ${pollCount}: Our prompt ${promptId} has been in running state for too long (${pollCount} polls)`);
                 console.error(`[ComfyUI API] This indicates a workflow execution error - probably model loading or VRAM issues`);
                 
@@ -393,18 +398,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 
                 return res.status(502).json({
                   error: 'Prompt stuck in execution',
-                  details: `Prompt ${promptId} has been running for ${pollCount} polls without completing. This usually indicates a ComfyUI workflow execution error - check if the model file exists and there's sufficient VRAM available.`
+                  details: `Prompt ${promptId} has been running for ${pollCount} polls without completing. This usually indicates a ComfyUI workflow execution error - check if the model file exists and there's sufficient VRAM available.`,
+                  promptId
                 });
               }
               
               // Check if our prompt is stuck in pending state for too long
-              if (isPending && pollCount > 120 && queueRunning.length > 0) {
+              if (isPending && pollCount > stuckPendingPollThreshold && queueRunning.length > 0) {
                 const stuckRunningPrompt = queueRunning[0];
                 const stuckPromptId = stuckRunningPrompt[1];
                 console.error(`[ComfyUI API] Poll ${pollCount}: Prompt ${promptId} stuck in pending state due to stuck running prompt ${stuckPromptId}`);
                 return res.status(502).json({
                   error: 'ComfyUI queue is stuck',
-                  details: `Prompt ${promptId} cannot proceed because ComfyUI has a stuck prompt (${stuckPromptId}) in the running state that never completes. You may need to restart ComfyUI to clear the stuck queue.`
+                  details: `Prompt ${promptId} cannot proceed because ComfyUI has a stuck prompt (${stuckPromptId}) in the running state that never completes. You may need to restart ComfyUI to clear the stuck queue.`,
+                  promptId
                 });
               }
               
@@ -441,7 +448,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             console.log(`[ComfyUI API] Could not check queue status during polling: ${e}`);
           }
         }
-        await new Promise(r => setTimeout(r, 500));
+        await new Promise(r => setTimeout(r, pollIntervalMs));
         continue;
       }
 
@@ -451,7 +458,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const nodeKey = Object.keys(outputs).find(k => outputs[k]?.images?.length > 0);
         if (!nodeKey) {
           console.log(`[ComfyUI API] Success but no images found in outputs`);
-          return res.status(200).json({ output: [], status: 'succeeded' });
+          return res.status(200).json({ output: [], status: 'succeeded', promptId });
         }
 
         const images = outputs[nodeKey].images;
@@ -460,14 +467,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           `${comfyuiUrl}/view?filename=${encodeURIComponent(img.filename)}&subfolder=${encodeURIComponent(img.subfolder)}&type=${encodeURIComponent(img.type)}`
         );
         console.log(`[ComfyUI API] Generated image URLs: ${imageUrls.join(', ')}`);
-        return res.status(200).json({ output: imageUrls, status: 'succeeded' });
+        return res.status(200).json({ output: imageUrls, status: 'succeeded', promptId });
       }
 
       if (status === 'error') {
         console.error(`[ComfyUI API] Generation error: ${pd?.status?.error}`);
         return res.status(502).json({
           error: 'ComfyUI generation error',
-          details: pd?.status?.error ?? 'Unknown ComfyUI error'
+          details: pd?.status?.error ?? 'Unknown ComfyUI error',
+          promptId
         });
       }
 
@@ -494,7 +502,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                   `${comfyuiUrl}/view?filename=${encodeURIComponent(img.filename)}&subfolder=${encodeURIComponent(img.subfolder)}&type=${encodeURIComponent(img.type)}`
                 );
                 console.log(`[ComfyUI API] Final check succeeded! Generated image URLs: ${imageUrls.join(', ')}`);
-                return res.status(200).json({ output: imageUrls, status: 'succeeded' });
+                return res.status(200).json({ output: imageUrls, status: 'succeeded', promptId });
               }
             }
           }
@@ -504,11 +512,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         
         return res.status(502).json({
           error: 'Prompt execution exceeded time limit',
-          details: `Prompt ${promptId} was queued and likely executed successfully (based on ComfyUI logs) but results were not found in history after ${pollCount} polls. This may indicate a ComfyUI history synchronization issue.`
+          details: `Prompt ${promptId} was queued and likely executed successfully (based on ComfyUI logs) but results were not found in history after ${pollCount} polls. This may indicate a ComfyUI history synchronization issue.`,
+          promptId
         });
       }
 
-      await new Promise(r => setTimeout(r, 500));
+      await new Promise(r => setTimeout(r, pollIntervalMs));
     }
   } catch (err: any) {
     return res.status(500).json({ error: err?.message || 'Failed to generate image with ComfyUI' });

@@ -128,3 +128,13 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# Project-specific
+attached_assets/
+cache/
+notes
+*.png
+!public/**/*.png
+ComfyUI_*.png
+generated-icon.png
+cors_config.json

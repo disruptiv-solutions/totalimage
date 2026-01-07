@@ -146,6 +146,9 @@ const GeneratePage: React.FC = () => {
   const [modelInputs, setModelInputs] = useState<Record<string, any>>({});
   const [useRandomSeed, setUseRandomSeed] = useState(false);
   const [batchCount, setBatchCount] = useState(1);
+  const [lastPromptId, setLastPromptId] = useState<string | null>(null);
+  const [cancelingPrompt, setCancelingPrompt] = useState(false);
+  const [cancelFeedback, setCancelFeedback] = useState('');
   
   // Function to generate a random seed
   const generateRandomSeed = () => {
@@ -160,7 +163,7 @@ const GeneratePage: React.FC = () => {
   const [loras, setLoras] = useState<LoRAConfig[]>([
     {
       id: '1',
-      name: 'Lois-Griffin-ill-v1-sadvideocard.safetensors',
+      name: '',
       strengthModel: 1.0,
       strengthClip: 1.0,
       enabled: false,
@@ -620,13 +623,8 @@ const GeneratePage: React.FC = () => {
     }
   };
 
-  // Default LoRA names (seed list) - will be replaced by live options
-  const defaultLoraList = [
-    'LoisGriffinlllustrious1.0.safetensors',
-    'Lois-Griffin-ill-v1-sadvideocard.safetensors',
-    'LoisGriffinNoobXL_byKonan.safetensors',
-  ];
-  const [loraOptions, setLoraOptions] = useState<string[]>(defaultLoraList);
+  // LoRA options fetched live from ComfyUI
+  const [loraOptions, setLoraOptions] = useState<string[]>([]);
   const [checkpointOptions, setCheckpointOptions] = useState<string[]>(['waiIllustriousSDXL_v150.safetensors']);
   const [ckptName, setCkptName] = useState<string>('waiIllustriousSDXL_v150.safetensors');
 
@@ -813,12 +811,41 @@ const GeneratePage: React.FC = () => {
     setError('');
   };
 
+  const handleCancelPrompt = async () => {
+    setCancelFeedback('');
+    setError('');
+    setCancelingPrompt(true);
+    try {
+      const resp = await fetch('/api/comfyui-cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ promptId: lastPromptId || undefined }),
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok) {
+        throw new Error(data?.error || 'Failed to cancel ComfyUI prompt');
+      }
+      setCancelFeedback(
+        data?.promptId
+          ? `Cancelled prompt ${data.promptId}`
+          : data?.message || 'No running prompt to cancel'
+      );
+      setGenerating(false);
+    } catch (e: any) {
+      setError(e?.message || 'Failed to cancel ComfyUI prompt');
+    } finally {
+      setCancelingPrompt(false);
+    }
+  };
+
   const handleGenerateImage = async () => {
     if (!selectedModel || !prompt.trim()) return;
 
     try {
       setGenerating(true);
       setError('');
+      setCancelFeedback('');
+      setLastPromptId(null);
 
       // Create an abort controller for this generation
       generationAbortController.current = new AbortController();
@@ -878,11 +905,11 @@ const GeneratePage: React.FC = () => {
         }),
       });
 
-      if (!response.ok) {
-          throw new Error(`Failed to generate image ${i + 1}/${batchCount}`);
-        }
-
         const result = await response.json();
+        setLastPromptId(result?.promptId || null);
+        if (!response.ok) {
+          throw new Error(result?.error || `Failed to generate image ${i + 1}/${batchCount}`);
+        }
         
         // Log the result
         console.log(`=== IMAGE ${i + 1}/${batchCount} RESULT ===`);
@@ -1106,11 +1133,12 @@ const GeneratePage: React.FC = () => {
         const resp = await fetch('/api/comfyui-options');
         if (!resp.ok) return;
         const data = await resp.json();
-        if (Array.isArray(data?.loras) && data.loras.length > 0) {
-          const merged = Array.from(new Set([...(data.loras as string[]), ...defaultLoraList]));
-          setLoraOptions(merged);
-          if (loras.length === 1 && !loras[0].enabled) {
-            updateLora(loras[0].id, { name: merged[0] || loras[0].name });
+        if (Array.isArray(data?.loras)) {
+          const comfyLoras = (data.loras as string[]).filter(Boolean);
+          setLoraOptions(comfyLoras);
+          // Auto-select the first available LoRA name only if user hasn't enabled anything yet
+          if (comfyLoras.length > 0 && loras.length === 1 && !loras[0].enabled) {
+            updateLora(loras[0].id, { name: comfyLoras[0] });
           }
         }
         if (Array.isArray(data?.checkpoints) && data.checkpoints.length > 0) {
@@ -1932,6 +1960,15 @@ const GeneratePage: React.FC = () => {
                             <button type="button" className="p-2 rounded-full border hover:bg-gray-50" title="Voice">
                               <Mic className="h-4 w-4" />
                             </button>
+                            <button
+                              type="button"
+                              onClick={handleCancelPrompt}
+                              disabled={cancelingPrompt}
+                              className="px-2 py-1 text-xs rounded border border-red-200 text-red-700 hover:bg-red-50 disabled:opacity-50"
+                              aria-label="Cancel running ComfyUI prompt"
+                            >
+                              {cancelingPrompt ? 'Cancelling…' : 'Cancel Comfy prompt'}
+                            </button>
                           </>
                         )}
                         <button
@@ -1956,6 +1993,11 @@ const GeneratePage: React.FC = () => {
                   {error && (
                     <div className="p-2 bg-red-50 border border-red-200 rounded-lg text-red-700 text-xs">
                       {error}
+                    </div>
+                  )}
+                  {cancelFeedback && (
+                    <div className="p-2 bg-green-50 border border-green-200 rounded-lg text-green-700 text-xs">
+                      {cancelFeedback}
                     </div>
                   )}
                 </div>

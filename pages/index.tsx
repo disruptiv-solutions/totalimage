@@ -130,10 +130,10 @@ function Home() {
                 Welcome back
               </h1>
               <Link
-                href="/galleries"
+                href="/characters"
                 className="px-6 py-2 bg-[#4CAF50] text-white text-lg font-semibold rounded-lg hover:bg-[#45a049] transition-colors duration-200"
               >
-                View Galleries
+                View Characters
               </Link>
             </div>
             <p className="text-neutral-400 text-lg mb-8">
@@ -163,69 +163,49 @@ function Home() {
         <div className="mt-12">
           <h2 className="text-2xl font-bold text-white mb-6">Chat with Characters</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-12">
-            {/* Lois Card */}
-            <div className="group">
-              <div className="bg-neutral-900 rounded-xl overflow-hidden border border-neutral-800 hover:border-[#4CAF50]/50 transition-all duration-200">
-                <div className="aspect-w-16 aspect-h-9 bg-neutral-800">
+            {[
+              {
+                name: 'Lois',
+                description: 'Have a conversation with Lois',
+                image: '/loischat.png',
+              },
+              {
+                name: 'Leela',
+                description: 'Have a conversation with Leela',
+                image: '/leelachat.png',
+              },
+            ].map((c) => (
+              <Link
+                key={c.name}
+                href={`/chat/${encodeURIComponent(c.name)}`}
+                aria-label={`Chat with ${c.name}`}
+                className="group relative rounded-2xl overflow-hidden border border-neutral-800 bg-neutral-900 hover:border-[#4CAF50]/40 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#4CAF50]"
+              >
+                <div className="relative aspect-video bg-neutral-800 overflow-hidden">
                   <img
-                    src="/loischat.png"
-                    alt="Chat with Lois"
-                    className="w-full h-full object-cover object-top"
-                    style={{ maxHeight: '225px' }}
+                    src={c.image}
+                    alt={`Chat with ${c.name}`}
+                    className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-300 group-hover:scale-[1.03]"
+                    loading="lazy"
+                    decoding="async"
                   />
-                </div>
-                <div className="p-4">
-                  <h3 className="text-xl font-semibold text-white mb-2">Chat with Lois</h3>
-                  <p className="text-neutral-400 mb-4">Have a conversation with Lois</p>
-                  <div className="flex gap-2">
-                    <Link
-                      href="/chat/Lois"
-                      className="flex-1 text-center px-4 py-2 bg-[#4CAF50] text-white rounded hover:bg-[#45a049] transition-colors duration-200"
-                    >
-                      Text
-                    </Link>
-                    <Link
-                      href="/voice/Lois"
-                      className="flex-1 text-center px-4 py-2 bg-neutral-800 text-white border border-neutral-800 rounded hover:border-[#4CAF50]/50 transition-colors duration-200"
-                    >
-                      Voice
-                    </Link>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent" />
+                  <div className="absolute inset-x-0 bottom-0 p-5">
+                    <div className="flex items-end justify-between gap-4">
+                      <div className="min-w-0">
+                        <h3 className="text-xl font-semibold text-white leading-tight">
+                          Chat with <span className="text-white">{c.name}</span>
+                        </h3>
+                        <p className="text-sm text-neutral-300 mt-1 line-clamp-1">{c.description}</p>
+                      </div>
+                      <span className="shrink-0 inline-flex items-center justify-center px-4 py-2 rounded-full bg-[#4CAF50] text-white font-semibold group-hover:bg-[#45a049] transition-colors duration-200">
+                        Chat
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
-
-            {/* Leela Card */}
-            <div className="group">
-              <div className="bg-neutral-900 rounded-xl overflow-hidden border border-neutral-800 hover:border-[#4CAF50]/50 transition-all duration-200">
-                <div className="aspect-w-16 aspect-h-9 bg-neutral-800">
-                  <img
-                    src="/leelachat.png"
-                    alt="Chat with Leela"
-                    className="w-full h-full object-cover object-top"
-                    style={{ maxHeight: '225px' }}
-                  />
-                </div>
-                <div className="p-4">
-                  <h3 className="text-xl font-semibold text-white mb-2">Chat with Leela</h3>
-                  <p className="text-neutral-400 mb-4">Have a conversation with Leela</p>
-                  <div className="flex gap-2">
-                    <Link
-                      href="/chat/Leela"
-                      className="flex-1 text-center px-4 py-2 bg-[#4CAF50] text-white rounded hover:bg-[#45a049] transition-colors duration-200"
-                    >
-                      Text
-                    </Link>
-                    <Link
-                      href="/voice/Leela"
-                      className="flex-1 text-center px-4 py-2 bg-neutral-800 text-white border border-neutral-800 rounded hover:border-[#4CAF50]/50 transition-colors duration-200"
-                    >
-                      Voice
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
+              </Link>
+            ))}
           </div>
 
             <h2 className="text-2xl font-bold text-white mb-6">Recent Updates</h2>
@@ -233,7 +213,7 @@ function Home() {
               {recentSets.map((set) => (
                 <Link
                   key={set.id}
-                  href={`/galleries/${set.galleryId}/sets/${set.id}`}
+                  href={`/characters/${set.galleryId}/galleries/${set.id}`}
                   className="group cursor-pointer rounded-xl overflow-hidden border border-neutral-800 bg-neutral-900 hover:border-[#4CAF50]/50 transition-all duration-200 flex flex-col"
                 >
                   <div className="relative w-full pt-[56.25%] overflow-hidden bg-neutral-800">
@@ -266,7 +246,7 @@ function Home() {
            
 
             <Link
-              href="/galleries"
+              href="/characters"
               className="group cursor-pointer rounded-xl overflow-hidden border border-neutral-800 bg-neutral-900 hover:border-[#4CAF50]/50 transition-all duration-200 flex flex-col"
             >
               <div className="relative w-full pt-[56.25%] bg-neutral-800/50">
@@ -275,10 +255,10 @@ function Home() {
                     <Camera className="w-8 h-8 text-[#4CAF50]" />
                   </div>
                   <h3 className="text-lg font-semibold text-white text-center mb-2">
-                    Browse All Galleries
+                    Browse All Characters
                   </h3>
                   <p className="text-sm text-neutral-400 text-center">
-                    Explore {totalGalleries} galleries with {totalSets} sets
+                    Explore {totalGalleries} characters with {totalSets} sets
                   </p>
                 </div>
               </div>

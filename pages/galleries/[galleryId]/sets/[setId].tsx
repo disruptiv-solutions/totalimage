@@ -38,7 +38,15 @@ interface SetData {
 
 const SetDetailPage: React.FC = () => {
   const router = useRouter();
-  const { galleryId, setId } = router.query;
+  // New canonical route: /characters/[characterId]/galleries/[galleryId]
+  // Legacy route: /galleries/[galleryId]/sets/[setId] (where galleryId is the characterId)
+  const routeCharacterId = typeof router.query.characterId === 'string' ? router.query.characterId : undefined;
+  const legacyCharacterId = typeof router.query.galleryId === 'string' ? router.query.galleryId : undefined;
+  const characterId = routeCharacterId ?? legacyCharacterId;
+
+  const routeSetId = typeof router.query.setId === 'string' ? router.query.setId : undefined;
+  const routeGalleryId = typeof router.query.galleryId === 'string' ? router.query.galleryId : undefined;
+  const galleryId = routeSetId ?? (routeCharacterId ? routeGalleryId : undefined);
   const [setData, setSetData] = useState<SetData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
@@ -54,42 +62,42 @@ const SetDetailPage: React.FC = () => {
   }
 
   useEffect(() => {
-    if (!galleryId || !setId) return;
+    if (!characterId || !galleryId) return;
 
     let unsubscribeImages: (() => void) | null = null;
 
     const fetchSet = async () => {
       setLoading(true);
       try {
-        // Fetch gallery information
-        const galleryRef = doc(db, 'users', adminUid, 'galleries', galleryId as string);
+        // Fetch character information
+        const galleryRef = doc(db, 'users', adminUid, 'galleries', characterId);
         const gallerySnap = await getDoc(galleryRef);
         if (!gallerySnap.exists()) {
-          setError('Gallery not found');
+          setError('Character not found');
           return;
         }
         const galleryName = gallerySnap.data().name;
 
-        // Fetch set information
+        // Fetch gallery (set) information
         const setRef = doc(
           db,
           'users',
           adminUid,
           'galleries',
-          galleryId as string,
+          characterId,
           'sets',
-          setId as string
+          galleryId
         );
         const setSnap = await getDoc(setRef);
         if (!setSnap.exists()) {
-          setError('Set not found');
+          setError('Gallery not found');
           return;
         }
         const setInfo = setSnap.data();
 
         // Set initial set data (with an empty images array)
         setSetData({
-          id: setId as string,
+          id: galleryId,
           name: setInfo.name,
           imageCount: 0,
           createdAt: setInfo.createdAt?.toDate() || new Date(),
@@ -103,9 +111,9 @@ const SetDetailPage: React.FC = () => {
           'users',
           adminUid,
           'galleries',
-          galleryId as string,
+          characterId,
           'sets',
-          setId as string,
+          galleryId,
           'images'
         );
         const imagesQuery = query(imagesRef, orderBy('uploadedAt', 'desc'));
@@ -138,7 +146,8 @@ const SetDetailPage: React.FC = () => {
         unsubscribeImages();
       }
     };
-  }, [galleryId, setId, adminUid]);
+  }, [characterId, galleryId, adminUid]);
+
 
   useEffect(() => {
     if (fullscreen) {
@@ -204,12 +213,12 @@ const SetDetailPage: React.FC = () => {
       <div className="min-h-screen flex flex-col items-center justify-center bg-black p-4">
         <div className="bg-neutral-900 p-6 rounded-lg border border-red-500/20 w-full max-w-md text-center">
           <h3 className="text-red-500 font-semibold mb-2 text-lg">Error</h3>
-          <p className="text-red-400">{error || 'Set not found'}</p>
+          <p className="text-red-400">{error || 'Gallery not found'}</p>
           <Link
-            href={`/galleries/${galleryId}`}
+            href={characterId ? `/characters/${characterId}` : '/characters'}
             className="mt-4 px-4 py-2 bg-red-500/10 text-red-500 rounded-md hover:bg-red-500/20 transition-colors duration-200 inline-block"
           >
-            Back to Sets
+            Back to Galleries
           </Link>
         </div>
       </div>
@@ -223,12 +232,12 @@ const SetDetailPage: React.FC = () => {
         {/* Header */}
         <div className="mb-6">
           <div className="text-sm text-neutral-400 mb-1">
-            <Link href="/galleries" className="hover:text-[#4CAF50] transition-colors duration-200">
-              Galleries
+            <Link href="/characters" className="hover:text-[#4CAF50] transition-colors duration-200">
+              Characters
             </Link>
             {' / '}
             <Link
-              href={`/galleries/${galleryId}`}
+              href={`/characters/${characterId}`}
               className="hover:text-[#4CAF50] transition-colors duration-200"
             >
               {setData.galleryName}
@@ -256,11 +265,11 @@ const SetDetailPage: React.FC = () => {
                 <Grid className="w-5 h-5" />
               </button>
               <Link
-                href={`/galleries/${galleryId}`}
+                href={`/characters/${characterId}`}
                 className="group flex items-center px-5 py-2.5 bg-neutral-900 text-white rounded-full hover:bg-neutral-800 transition-all duration-200"
               >
                 <ArrowLeft className="w-4 h-4 mr-2 transform group-hover:-translate-x-1 transition-transform" />
-                Back to Sets
+                Back to Galleries
               </Link>
             </div>
           </div>
