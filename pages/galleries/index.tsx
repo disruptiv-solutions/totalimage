@@ -36,69 +36,62 @@ interface GalleryCardProps {
 
 const GalleryCard: React.FC<GalleryCardProps> = ({ gallery, formatDate }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
-  const [displayImageIndex, setDisplayImageIndex] = useState<number>(0);
-  const [fadeOpacity, setFadeOpacity] = useState<number>(1);
+  const [nextImageIndex, setNextImageIndex] = useState<number | null>(null);
+  const [isTransitioning, setIsTransitioning] = useState<boolean>(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const fadeTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const transitionTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const getNextRandomIndex = useCallback((currentIndex: number, imageCount: number): number => {
+    if (imageCount <= 1) return currentIndex;
+    let newIndex = currentIndex;
+    do {
+      newIndex = Math.floor(Math.random() * imageCount);
+    } while (newIndex === currentIndex && imageCount > 1);
+    return newIndex;
+  }, []);
+
+  const startTransition = useCallback(() => {
+    if (gallery.allImages.length <= 1) return;
+    
+    const imageCount = gallery.allImages.length;
+    const newIndex = getNextRandomIndex(currentImageIndex, imageCount);
+    
+    // Set the next image and start fade out
+    setNextImageIndex(newIndex);
+    setIsTransitioning(true);
+    
+    // After fade out completes, switch to new image and fade in
+    transitionTimerRef.current = setTimeout(() => {
+      setCurrentImageIndex(newIndex);
+      setNextImageIndex(null);
+      setIsTransitioning(false);
+    }, 500); // Half of transition duration (1000ms total)
+  }, [gallery.allImages.length, currentImageIndex, getNextRandomIndex]);
 
   const scheduleNextImage = useCallback(() => {
     if (gallery.allImages.length <= 1) return;
     const delay = SLIDE_INTERVAL + Math.random() * 2000; // add random delay up to 2 seconds
     timerRef.current = setTimeout(() => {
-      setCurrentImageIndex((prevIndex) => {
-        const imageCount = gallery.allImages.length;
-        if (imageCount <= 1) return prevIndex;
-        let newIndex = prevIndex;
-        do {
-          newIndex = Math.floor(Math.random() * imageCount);
-        } while (newIndex === prevIndex && imageCount > 1);
-        return newIndex;
-      });
+      startTransition();
       scheduleNextImage();
     }, delay);
-  }, [gallery.allImages.length]);
+  }, [gallery.allImages.length, startTransition]);
 
   useEffect(() => {
     if (gallery.allImages.length <= 1) return;
     const initialDelay = Math.random() * SLIDE_INTERVAL;
     timerRef.current = setTimeout(() => {
-      setCurrentImageIndex((prevIndex) => {
-        const imageCount = gallery.allImages.length;
-        if (imageCount <= 1) return prevIndex;
-        let newIndex = prevIndex;
-        do {
-          newIndex = Math.floor(Math.random() * imageCount);
-        } while (newIndex === prevIndex && imageCount > 1);
-        return newIndex;
-      });
+      startTransition();
       scheduleNextImage();
     }, initialDelay);
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
-      if (fadeTimerRef.current) clearTimeout(fadeTimerRef.current);
+      if (transitionTimerRef.current) clearTimeout(transitionTimerRef.current);
     };
-  }, [gallery.allImages.length, scheduleNextImage]);
+  }, [gallery.allImages.length, startTransition, scheduleNextImage]);
 
-  // Handle smooth fade transition when image index changes
-  useEffect(() => {
-    if (currentImageIndex !== displayImageIndex && gallery.allImages.length > 1) {
-      // Start fade out
-      setFadeOpacity(0);
-      // After fade out completes, switch image and fade in
-      fadeTimerRef.current = setTimeout(() => {
-        setDisplayImageIndex(currentImageIndex);
-        // Trigger fade in
-        requestAnimationFrame(() => {
-          setFadeOpacity(1);
-        });
-      }, 400); // Half of transition duration for fade out
-      return () => {
-        if (fadeTimerRef.current) clearTimeout(fadeTimerRef.current);
-      };
-    }
-  }, [currentImageIndex, displayImageIndex, gallery.allImages.length]);
-
-  const displayImage = gallery.allImages[displayImageIndex];
+  const currentImage = gallery.allImages[currentImageIndex];
+  const nextImage = nextImageIndex !== null ? gallery.allImages[nextImageIndex] : null;
 
   return (
     <Link
@@ -109,13 +102,26 @@ const GalleryCard: React.FC<GalleryCardProps> = ({ gallery, formatDate }) => {
       <div className="relative">
         {gallery.allImages.length > 0 ? (
           <div className="aspect-w-1 aspect-h-1 relative">
+            {/* Current Image */}
             <img
-              key={displayImage.id}
-              src={displayImage.url}
-              alt={displayImage.name}
-              className="absolute inset-0 w-full h-full object-cover object-top transition-opacity duration-800 ease-in-out"
-              style={{ opacity: fadeOpacity }}
+              key={`current-${currentImage.id}`}
+              src={currentImage.url}
+              alt={currentImage.name}
+              className={`absolute inset-0 w-full h-full object-cover object-top transition-opacity duration-500 ease-in-out ${
+                isTransitioning ? 'opacity-0' : 'opacity-100'
+              }`}
             />
+            {/* Next Image (during transition) */}
+            {nextImage && (
+              <img
+                key={`next-${nextImage.id}`}
+                src={nextImage.url}
+                alt={nextImage.name}
+                className={`absolute inset-0 w-full h-full object-cover object-top transition-opacity duration-500 ease-in-out ${
+                  isTransitioning ? 'opacity-100' : 'opacity-0'
+                }`}
+              />
+            )}
           </div>
         ) : (
           <div className="aspect-w-1 aspect-h-1 bg-neutral-800 flex items-center justify-center">
@@ -131,7 +137,7 @@ const GalleryCard: React.FC<GalleryCardProps> = ({ gallery, formatDate }) => {
           </div>
         </div>
       </div>
-    </Link>
+            </Link>
   );
 };
 
