@@ -27,6 +27,44 @@ img {
   height: auto;
 }
 
+/* Custom scrollbar styling */
+/* Webkit browsers (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(64, 64, 64, 0.5);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(76, 175, 80, 0.6);
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: rgba(76, 175, 80, 0.8);
+  background-clip: padding-box;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(64, 64, 64, 0.5) transparent;
+}
+
+*:hover {
+  scrollbar-color: rgba(76, 175, 80, 0.6) transparent;
+}
+
 @keyframes pulse {
   0%, 100% {
     opacity: 1;
