@@ -1,13 +1,17 @@
-import { loadStripe } from '@stripe/stripe-js';
+import { loadStripe, Stripe } from '@stripe/stripe-js';
 
-if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
-  throw new Error('NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY is not defined');
-}
-
-export const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
+// Only initialize Stripe if the key is available
+export const stripePromise: Promise<Stripe | null> | null = 
+  typeof window !== 'undefined' && process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+    ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
+    : null;
 
 export const createCheckoutSession = async (userId: string, priceId: string) => {
   try {
+    if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
+      throw new Error('Stripe is not configured. Please set NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY.');
+    }
+
     const response = await fetch('/api/create-checkout-session', {
       method: 'POST',
       headers: {
@@ -25,6 +29,11 @@ export const createCheckoutSession = async (userId: string, priceId: string) => 
     }
 
     const { sessionId } = await response.json();
+    
+    if (!stripePromise) {
+      throw new Error('Stripe is not configured');
+    }
+
     const stripe = await stripePromise;
 
     if (!stripe) {

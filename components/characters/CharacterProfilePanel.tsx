@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowLeft, FolderOpen, MessageCircle } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, FolderOpen, MessageCircle } from 'lucide-react';
 
 type CharacterProfilePanelProps = {
   characterName: string;
@@ -8,6 +8,8 @@ type CharacterProfilePanelProps = {
   galleryCount: number;
   activeTab?: 'galleries' | 'chat';
   isLoading?: boolean;
+  collapsed?: boolean;
+  onToggleCollapse?: () => void;
 };
 
 export const CharacterProfilePanel = ({
@@ -17,10 +19,67 @@ export const CharacterProfilePanel = ({
   galleryCount,
   activeTab = 'galleries',
   isLoading = false,
+  collapsed = false,
+  onToggleCollapse,
 }: CharacterProfilePanelProps) => {
   return (
-    <aside className="lg:sticky lg:top-24 h-fit" aria-busy={isLoading}>
-      <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5">
+    <aside className={`lg:sticky lg:top-24 h-fit transition-all duration-300 w-full ${collapsed ? 'lg:w-16' : 'lg:w-[360px]'}`} aria-busy={isLoading}>
+      <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5 relative w-full max-w-full">
+        {/* Collapse Toggle Button - Desktop Only */}
+        {onToggleCollapse && (
+          <button
+            onClick={onToggleCollapse}
+            className="hidden lg:flex absolute -right-3 top-6 z-10 items-center justify-center w-6 h-6 bg-neutral-800 border border-neutral-700 rounded-full text-neutral-400 hover:text-white hover:bg-neutral-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#4CAF50]"
+            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+          </button>
+        )}
+
+        {collapsed ? (
+          // Collapsed View - Icon Only
+          <div className="flex flex-col items-center gap-4">
+            {isLoading ? (
+              <div className="h-8 w-8 bg-neutral-800 rounded-full animate-pulse" />
+            ) : profileImageUrl ? (
+              <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-neutral-700">
+                <img src={profileImageUrl} alt={characterName} className="w-full h-full object-cover" />
+              </div>
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center">
+                <FolderOpen className="w-5 h-5 text-neutral-600" />
+              </div>
+            )}
+            <div className="w-full border-t border-neutral-800" />
+            <Link
+              href={`/characters/${characterId}`}
+              className={`p-2 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#4CAF50] ${
+                activeTab === 'galleries'
+                  ? 'bg-[#4CAF50]/10 text-[#4CAF50]'
+                  : 'text-neutral-400 hover:text-white hover:bg-neutral-800'
+              }`}
+              aria-label="Show galleries"
+              title="Galleries"
+            >
+              <FolderOpen className="w-5 h-5" />
+            </Link>
+            <Link
+              href={`/characters/${characterId}/chat`}
+              className={`p-2 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#4CAF50] ${
+                activeTab === 'chat'
+                  ? 'bg-[#4CAF50] text-white'
+                  : 'text-neutral-400 hover:text-white hover:bg-neutral-800'
+              }`}
+              aria-label={`Chat with ${characterName}`}
+              title="Chat"
+            >
+              <MessageCircle className="w-5 h-5" />
+            </Link>
+          </div>
+        ) : (
+          // Expanded View
+          <>
         <div className="flex items-center justify-between gap-4">
           {isLoading ? (
             <div className="h-7 w-40 bg-neutral-800 rounded-md animate-pulse" />
@@ -96,6 +155,8 @@ export const CharacterProfilePanel = ({
             </Link>
           )}
         </div>
+          </>
+        )}
       </div>
     </aside>
   );

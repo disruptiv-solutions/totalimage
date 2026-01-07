@@ -31,7 +31,7 @@ function Home() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black">
+      <div className="min-h-screen flex items-center justify-center bg-black w-full max-w-full overflow-x-hidden">
         <div className="w-16 h-16 relative">
           <div className="absolute inset-0 rounded-full border-4 border-[#4CAF50]/20 animate-pulse"></div>
           <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-[#4CAF50] animate-spin"></div>
@@ -42,7 +42,7 @@ function Home() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-black">
+      <div className="min-h-screen bg-black w-full max-w-full overflow-x-hidden">
         <div className="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8 relative">
           <div className="text-center relative z-10">
             <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-white mb-6">

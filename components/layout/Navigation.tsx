@@ -37,8 +37,8 @@ export default function Navigation() {
 
   if (!user) {
     return (
-      <nav className="bg-black border-b border-neutral-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <nav className="bg-black border-b border-neutral-800 w-full max-w-full overflow-x-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
           <div className="flex justify-between h-20 items-center">
             <button
               onClick={handleTitleClick}
