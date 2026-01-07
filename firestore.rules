@@ -1,0 +1,111 @@
+rules_version = '2';
+service cloud.firestore {
+
+  function isSignedIn() {
+    return request.auth != null;
+  }
+
+  // Hard-coded primary admin UID (optional convenience)
+  function isPrimaryAdmin() {
+    return isSignedIn() && request.auth.uid == "RDEmPBpjteScOAWUYwX9vmxmv0X2";
+  }
+
+  function isAdmin() {
+    return isSignedIn()
+      && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+      && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+  }
+
+  function isOwner(userId) {
+    return isSignedIn() && request.auth.uid == userId;
+  }
+
+  // Owner or any admin (or primary admin UID)
+  function ownerOrAdmin(userId) {
+    return isOwner(userId) || isPrimaryAdmin() || isAdmin();
+  }
+
+  // Check if userId is the admin UID (for public gallery access)
+  function isAdminUser(userId) {
+    return userId == "RDEmPBpjteScOAWUYwX9vmxmv0X2";
+  }
+
+  match /databases/{database}/documents {
+
+    // User profile documents
+    match /users/{userId} {
+      // Read: owner or admin
+      allow read: if ownerOrAdmin(userId);
+      // Write: owner only
+      allow write: if isOwner(userId);
+
+      // Galleries subcollection
+      match /galleries/{galleryId} {
+        // Allow public read access to admin's galleries, owner/admin write
+        allow read: if ownerOrAdmin(userId) || isAdminUser(userId);
+        allow write: if isOwner(userId);
+
+        // Sets subcollection (galleries within galleries)
+        match /sets/{setId} {
+          // Allow public read access to admin's sets
+          allow read: if ownerOrAdmin(userId) || isAdminUser(userId);
+          allow write: if isOwner(userId);
+
+          // Images subcollection within sets
+          match /images/{imageId} {
+            // Allow public read access to admin's images
+            allow read: if ownerOrAdmin(userId) || isAdminUser(userId);
+            allow write: if isOwner(userId);
+          }
+        }
+
+        // Gallery images subcollection (legacy structure)
+        match /images/{imageId} {
+          allow read: if ownerOrAdmin(userId) || isAdminUser(userId);
+          allow write: if isOwner(userId);
+        }
+      }
+
+      // Subscriptions subcollection
+      match /subscriptions/{subscriptionId} {
+        // Users can read their own subscriptions, admins can read any
+        allow read: if ownerOrAdmin(userId);
+        // Only server-side writes (via admin SDK)
+        allow write: if false;
+      }
+
+      // Generation sessions stored under a user (images shown in UI)
+      match /sessions/{sessionId} {
+        // Session doc itself (metadata): owner or admin
+        allow read: if ownerOrAdmin(userId);
+        allow write: if isOwner(userId);
+
+        match /images/{imageId} {
+          // Owner or admin can read images metadata; owner writes
+          allow read: if ownerOrAdmin(userId);
+          allow write: if isOwner(userId);
+        }
+      }
+
+      // Catch-all for other nested user subcollections if any
+      match /{document=**} {
+        allow read: if ownerOrAdmin(userId);
+        allow write: if isOwner(userId);
+      }
+    }
+
+    // Global admin-only sessions (if you ever use a top-level collection)
+    match /generationSessions/{sessionId} {
+      allow read, write: if isAdmin();
+
+      match /images/{imageId} {
+        allow read, write: if isAdmin();
+      }
+    }
+
+    // Deny everything else
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
