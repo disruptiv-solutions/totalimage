@@ -65,8 +65,20 @@ export default async function handler(
     }
 
     // Set the return URL to subscription-details as the default.
-    const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-    const finalReturnUrl = returnUrl || `${BASE_URL}/subscription-details`;
+    // Get base URL from environment or construct from request
+    let baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+    
+    // If not set, try to construct from request headers (works in Vercel/production)
+    if (!baseUrl) {
+      const protocol = req.headers['x-forwarded-proto'] || 'https';
+      const host = req.headers['x-forwarded-host'] || req.headers.host || 'localhost:3000';
+      baseUrl = `${protocol}://${host}`;
+    }
+    
+    // Ensure baseUrl doesn't have trailing slash
+    baseUrl = baseUrl.replace(/\/$/, '');
+    
+    const finalReturnUrl = returnUrl || `${baseUrl}/subscription-details`;
     console.log('Using return URL:', finalReturnUrl);
 
     // Use a custom portal configuration if provided; otherwise, create one dynamically.

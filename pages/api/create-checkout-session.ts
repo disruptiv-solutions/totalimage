@@ -58,8 +58,31 @@ export default async function handler(
       // Continue without customer ID - Stripe will create a new customer
     }
 
-    // Log the environment variable for base URL
-    console.log(`[DEBUG] NEXT_PUBLIC_BASE_URL: ${process.env.NEXT_PUBLIC_BASE_URL}`);
+    // Get base URL from environment or construct from request
+    let baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+    
+    // If not set, try to construct from request headers (works in Vercel/production)
+    if (!baseUrl) {
+      const protocol = req.headers['x-forwarded-proto'] || 'https';
+      const host = req.headers['x-forwarded-host'] || req.headers.host || 'localhost:3000';
+      baseUrl = `${protocol}://${host}`;
+    }
+    
+    // Ensure baseUrl doesn't have trailing slash
+    baseUrl = baseUrl.replace(/\/$/, '');
+    
+    // Validate URL format
+    try {
+      new URL(baseUrl);
+    } catch (urlError) {
+      console.error(`[ERROR] Invalid base URL: ${baseUrl}`);
+      return res.status(500).json({ 
+        message: 'Server configuration error: Invalid base URL',
+        error: 'NEXT_PUBLIC_BASE_URL must be a valid URL'
+      });
+    }
+
+    console.log(`[DEBUG] Using base URL: ${baseUrl}`);
 
     // Build the session configuration
     const sessionConfig: Stripe.Checkout.SessionCreateParams = {
@@ -72,8 +95,8 @@ export default async function handler(
         },
       ],
       allow_promotion_codes: true,
-      success_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/?success=true&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/subscription?canceled=true`,
+      success_url: `${baseUrl}/?success=true&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/subscription?canceled=true`,
       client_reference_id: userId,
     };
 
