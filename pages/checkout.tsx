@@ -374,7 +374,7 @@ const CheckoutForm = ({
               onPricingPreviewChange(null);
               if (error) setError('');
             }}
-            placeholder="Enter code (e.g. IANTEST94)"
+            placeholder="Enter promotion code"
             className="flex-1 bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-[#4CAF50] focus:border-transparent"
             aria-label="Promotion code"
             autoComplete="off"
