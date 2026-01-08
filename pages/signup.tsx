@@ -73,7 +73,8 @@ function SignUp() {
         termsAcceptedAt: new Date().toISOString()
       });
       console.log('Signup successful, attempting to redirect...');
-      await router.push('/subscription');
+      // Use window.location for more reliable redirect
+      window.location.href = '/subscription';
     } catch (err: any) {
       console.error('Signup error:', err);
       setError(err.message || 'Failed to create an account');

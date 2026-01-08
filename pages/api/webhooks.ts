@@ -71,35 +71,9 @@ async function updateSubscriptionStatus(
         console.log('Updated existing subscription document');
       }
     } else {
-      // Otherwise, find the subscription document across all users using a collectionGroup query.
-      console.log('firebaseUID not found in customer metadata. Searching via collectionGroup query.');
-      const subscriptionsQuery = adminDb
-        .collectionGroup('subscriptions')
-        .where('stripeCustomerId', '==', customerId)
-        .where('stripeSubscriptionId', '==', subscription.id)
-        .limit(1);
-      const querySnapshot = await subscriptionsQuery.get();
-
-      const updateData = {
-        stripeSubscriptionId: subscription.id,
-        stripeCustomerId: customerId,
-        status: subscription.status,
-        priceId: subscription.items.data[0].price.id,
-        currentPeriodStart: new Date(subscription.current_period_start * 1000),
-        currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-        cancelAtPeriodEnd: subscription.cancel_at_period_end,
-        cancelAt: subscription.cancel_at ? new Date(subscription.cancel_at * 1000) : null,
-        updatedAt: new Date(),
-      };
-
-      if (querySnapshot.empty) {
-        console.log('No matching subscription document found via collectionGroup query.');
-      } else {
-        const docRef = querySnapshot.docs[0].ref;
-        console.log('Found matching document via collectionGroup query. Updating document with:', JSON.stringify(updateData, null, 2));
-        await docRef.update(updateData);
-        console.log('Updated existing subscription document via collectionGroup query');
-      }
+      // If firebaseUID is not available, we can't reliably find the user's subscription
+      // Log a warning but don't fail - the subscription will be created/updated when checkout completes
+      console.warn(`firebaseUID not found in customer metadata for customer ${customerId}. Subscription update skipped. The subscription will be created when checkout.session.completed event fires.`);
     }
 
     console.log(`Successfully updated subscription ${subscription.id} for customer ${customerId}`);
