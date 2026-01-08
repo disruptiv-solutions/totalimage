@@ -19,7 +19,7 @@ export default async function handler(
   }
 
   try {
-    const { userId, priceId, paymentMethodId } = req.body;
+    const { userId, priceId, paymentMethodId, promoCode } = req.body;
 
     if (!userId || !priceId || !paymentMethodId) {
       return res.status(400).json({ message: 'Missing required parameters' });
@@ -84,12 +84,42 @@ export default async function handler(
       },
     });
 
+    let promotionCodeId: string | null = null;
+    let appliedPromoCode: string | null = null;
+
+    if (typeof promoCode === 'string' && promoCode.trim()) {
+      const normalized = promoCode.trim();
+      try {
+        const promoList = await stripe.promotionCodes.list({
+          code: normalized,
+          active: true,
+          limit: 1,
+        });
+
+        const promo = promoList.data[0];
+        if (!promo) {
+          return res.status(400).json({ message: 'Invalid or inactive promotion code.' });
+        }
+
+        promotionCodeId = promo.id;
+        appliedPromoCode = promo.code ?? normalized;
+      } catch (promoErr: any) {
+        console.error(`[ERROR] Failed to validate promo code: ${promoErr.message}`);
+        return res.status(500).json({ message: 'Failed to validate promotion code.' });
+      }
+    }
+
     // Create subscription with payment method already attached
     // Since payment method is attached, Stripe will attempt to charge it immediately
     const subscription = await stripe.subscriptions.create({
       customer: stripeCustomerId,
       items: [{ price: priceId }],
       default_payment_method: paymentMethodId,
+      ...(promotionCodeId
+        ? {
+            discounts: [{ promotion_code: promotionCodeId }],
+          }
+        : {}),
       expand: ['latest_invoice.payment_intent'],
     });
 
@@ -104,6 +134,7 @@ export default async function handler(
         clientSecret: null,
         status: subscription.status,
         requiresAction: false,
+        appliedPromoCode,
       });
     }
 
@@ -114,6 +145,7 @@ export default async function handler(
         clientSecret: paymentIntent.client_secret,
         status: subscription.status,
         requiresAction: true,
+        appliedPromoCode,
       });
     }
 
@@ -123,6 +155,7 @@ export default async function handler(
       clientSecret: paymentIntent?.client_secret || null,
       status: subscription.status,
       requiresAction: false,
+      appliedPromoCode,
     });
   } catch (error: any) {
     console.error(`[ERROR] Error creating subscription: ${error.message}\nStack: ${error.stack}`);

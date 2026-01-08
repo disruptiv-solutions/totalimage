@@ -44,6 +44,8 @@ const CheckoutForm = ({ initialPeriod = 'monthly', onBillingPeriodChange }: Chec
   const router = useRouter();
   const { user } = useAuth();
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>(initialPeriod);
+  const [promoCode, setPromoCode] = useState('');
+  const [appliedPromoCode, setAppliedPromoCode] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -107,6 +109,7 @@ const CheckoutForm = ({ initialPeriod = 'monthly', onBillingPeriodChange }: Chec
           userId: user.uid,
           priceId,
           paymentMethodId: paymentMethod.id,
+          promoCode: promoCode.trim() ? promoCode.trim() : null,
         }),
       });
 
@@ -115,7 +118,12 @@ const CheckoutForm = ({ initialPeriod = 'monthly', onBillingPeriodChange }: Chec
         throw new Error(errorData.message || 'Failed to create subscription');
       }
 
-      const { clientSecret, status, requiresAction } = await response.json();
+      const { clientSecret, status, requiresAction, appliedPromoCode: serverAppliedPromoCode } = await response.json();
+      if (serverAppliedPromoCode) {
+        setAppliedPromoCode(serverAppliedPromoCode);
+      } else {
+        setAppliedPromoCode(null);
+      }
 
       if (status === 'active' || status === 'trialing') {
         // Subscription is already active, redirect to success
@@ -219,6 +227,34 @@ const CheckoutForm = ({ initialPeriod = 'monthly', onBillingPeriodChange }: Chec
         {billingPeriod === 'yearly' && (
           <p className="text-xs text-neutral-500 mt-1">
             ${(parseFloat(plan.yearlyPrice.replace('$', '')) / 12).toFixed(2)}/month billed annually
+          </p>
+        )}
+      </div>
+
+      {/* Promo Code */}
+      <div>
+        <label className="block text-sm font-medium text-white mb-3">
+          Promotion Code <span className="text-neutral-500 font-normal">(optional)</span>
+        </label>
+        <div className="flex gap-3">
+          <input
+            type="text"
+            value={promoCode}
+            onChange={(e) => {
+              setPromoCode(e.target.value);
+              setAppliedPromoCode(null);
+              if (error) setError('');
+            }}
+            placeholder="Enter code (e.g. IANTEST94)"
+            className="flex-1 bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-[#4CAF50] focus:border-transparent"
+            aria-label="Promotion code"
+            autoComplete="off"
+            disabled={loading}
+          />
+        </div>
+        {appliedPromoCode && (
+          <p className="mt-2 text-sm text-[#4CAF50]">
+            Code applied: <span className="font-semibold">{appliedPromoCode}</span>
           </p>
         )}
       </div>
