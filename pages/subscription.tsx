@@ -92,8 +92,8 @@ export default function Subscription() {
         customerId = customerData.customerId;
       }
 
-      const priceId = billingPeriod === 'monthly' ? plan.monthlyPriceId : plan.yearlyPriceId;
-      await createCheckoutSession(user.uid, priceId);
+      // Redirect to checkout page with billing period
+      router.push(`/checkout?period=${billingPeriod}`);
     } catch (err: any) {
       console.error('Subscription error:', err);
       setError('Failed to start subscription process. Please try again.');
