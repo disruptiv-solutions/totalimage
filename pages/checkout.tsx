@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '../contexts/AuthContext';
 import { loadStripe } from '@stripe/stripe-js';
@@ -8,7 +8,7 @@ import {
   useStripe,
   useElements,
 } from '@stripe/react-stripe-js';
-import { Shield, Loader, ArrowLeft, Check } from 'lucide-react';
+import { Shield, Loader, ArrowLeft, Check, Tag } from 'lucide-react';
 import Link from 'next/link';
 
 const stripePromise = typeof window !== 'undefined' && process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
@@ -33,19 +33,50 @@ const plan = {
 
 type BillingPeriod = 'monthly' | 'yearly';
 
+type PricingPreview = {
+  appliedPromoCode: string;
+  unitAmountOriginal: number;
+  unitAmountDiscounted: number;
+  discountAmount: number;
+  currency: string;
+  interval: 'month' | 'year';
+};
+
+const formatMoney = (amountInMinor: number, currency: string) => {
+  const amount = amountInMinor / 100;
+  try {
+    return new Intl.NumberFormat(undefined, {
+      style: 'currency',
+      currency: currency.toUpperCase(),
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
+  } catch {
+    return `$${amount.toFixed(2)}`;
+  }
+};
+
 interface CheckoutFormProps {
   initialPeriod?: BillingPeriod;
   onBillingPeriodChange?: (period: BillingPeriod) => void;
+  pricingPreview: PricingPreview | null;
+  onPricingPreviewChange: (next: PricingPreview | null) => void;
 }
 
-const CheckoutForm = ({ initialPeriod = 'monthly', onBillingPeriodChange }: CheckoutFormProps) => {
+const CheckoutForm = ({
+  initialPeriod = 'monthly',
+  onBillingPeriodChange,
+  pricingPreview,
+  onPricingPreviewChange,
+}: CheckoutFormProps) => {
   const stripe = useStripe();
   const elements = useElements();
   const router = useRouter();
   const { user } = useAuth();
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>(initialPeriod);
   const [promoCode, setPromoCode] = useState('');
-  const [appliedPromoCode, setAppliedPromoCode] = useState<string | null>(null);
+  const [promoStatus, setPromoStatus] = useState<'idle' | 'applying' | 'applied'>('idle');
+  const [promoError, setPromoError] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -56,6 +87,10 @@ const CheckoutForm = ({ initialPeriod = 'monthly', onBillingPeriodChange }: Chec
   const handleBillingPeriodChange = (period: BillingPeriod) => {
     setBillingPeriod(period);
     onBillingPeriodChange?.(period);
+    setPromoCode('');
+    setPromoStatus('idle');
+    setPromoError('');
+    onPricingPreviewChange(null);
   };
 
   // Calculate yearly savings
@@ -63,6 +98,89 @@ const CheckoutForm = ({ initialPeriod = 'monthly', onBillingPeriodChange }: Chec
   const yearlyPrice = 39.99;
   const savings = monthlyTotal - yearlyPrice;
   const savingsPercent = Math.round((savings / monthlyTotal) * 100);
+
+  const selectedPriceId = billingPeriod === 'monthly' ? plan.monthlyPriceId : plan.yearlyPriceId;
+
+  const basePriceDisplay = billingPeriod === 'monthly' ? plan.monthlyPrice : plan.yearlyPrice;
+  const baseIntervalDisplay = billingPeriod === 'monthly' ? 'month' : 'year';
+
+  const effectivePricing = useMemo(() => {
+    if (!pricingPreview) {
+      return {
+        originalLabel: basePriceDisplay,
+        discountedLabel: basePriceDisplay,
+        intervalLabel: baseIntervalDisplay,
+        hasDiscount: false,
+        discountLabel: null as string | null,
+      };
+    }
+
+    const original = formatMoney(pricingPreview.unitAmountOriginal, pricingPreview.currency);
+    const discounted = formatMoney(pricingPreview.unitAmountDiscounted, pricingPreview.currency);
+    const discount = formatMoney(pricingPreview.discountAmount, pricingPreview.currency);
+
+    return {
+      originalLabel: original,
+      discountedLabel: discounted,
+      intervalLabel: pricingPreview.interval,
+      hasDiscount: pricingPreview.discountAmount > 0,
+      discountLabel: discount,
+    };
+  }, [baseIntervalDisplay, basePriceDisplay, pricingPreview]);
+
+  const handleApplyPromoCode = async () => {
+    if (loading || promoStatus === 'applying') return;
+
+    const code = promoCode.trim();
+    if (!code) {
+      setPromoError('Enter a promotion code first.');
+      setPromoStatus('idle');
+      onPricingPreviewChange(null);
+      return;
+    }
+
+    try {
+      setPromoStatus('applying');
+      setPromoError('');
+      setError('');
+
+      const response = await fetch('/api/validate-promo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          promoCode: code,
+          priceId: selectedPriceId,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data?.message || 'Failed to validate code');
+      }
+
+      if (!data.valid) {
+        setPromoError(data.message || 'Invalid promotion code.');
+        setPromoStatus('idle');
+        onPricingPreviewChange(null);
+        return;
+      }
+
+      onPricingPreviewChange({
+        appliedPromoCode: data.appliedPromoCode,
+        unitAmountOriginal: data.pricing.unitAmountOriginal,
+        unitAmountDiscounted: data.pricing.unitAmountDiscounted,
+        discountAmount: data.pricing.discountAmount,
+        currency: data.price.currency,
+        interval: data.price.interval,
+      });
+
+      setPromoStatus('applied');
+    } catch (err: any) {
+      setPromoError(err?.message || 'Failed to validate promotion code.');
+      setPromoStatus('idle');
+      onPricingPreviewChange(null);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,8 +216,8 @@ const CheckoutForm = ({ initialPeriod = 'monthly', onBillingPeriodChange }: Chec
       }
 
       // Create subscription with selected price
-      const priceId = billingPeriod === 'monthly' ? plan.monthlyPriceId : plan.yearlyPriceId;
-      
+      const priceId = selectedPriceId;
+
       const response = await fetch('/api/create-subscription', {
         method: 'POST',
         headers: {
@@ -109,7 +227,7 @@ const CheckoutForm = ({ initialPeriod = 'monthly', onBillingPeriodChange }: Chec
           userId: user.uid,
           priceId,
           paymentMethodId: paymentMethod.id,
-          promoCode: promoCode.trim() ? promoCode.trim() : null,
+          promoCode: pricingPreview?.appliedPromoCode ?? (promoCode.trim() ? promoCode.trim() : null),
         }),
       });
 
@@ -118,12 +236,7 @@ const CheckoutForm = ({ initialPeriod = 'monthly', onBillingPeriodChange }: Chec
         throw new Error(errorData.message || 'Failed to create subscription');
       }
 
-      const { clientSecret, status, requiresAction, appliedPromoCode: serverAppliedPromoCode } = await response.json();
-      if (serverAppliedPromoCode) {
-        setAppliedPromoCode(serverAppliedPromoCode);
-      } else {
-        setAppliedPromoCode(null);
-      }
+      const { clientSecret, status, requiresAction } = await response.json();
 
       if (status === 'active' || status === 'trialing') {
         // Subscription is already active, redirect to success
@@ -217,18 +330,29 @@ const CheckoutForm = ({ initialPeriod = 'monthly', onBillingPeriodChange }: Chec
       <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-4">
         <div className="flex items-center justify-between">
           <span className="text-neutral-400">Total Toon Tease</span>
-          <span className="text-xl font-bold text-white">
-            {billingPeriod === 'monthly' ? plan.monthlyPrice : plan.yearlyPrice}
-            <span className="text-sm text-neutral-400 ml-1">
-              /{billingPeriod === 'monthly' ? 'month' : 'year'}
-            </span>
-          </span>
+          <div className="text-right">
+            {effectivePricing.hasDiscount && (
+              <div className="text-sm text-neutral-500 line-through">
+                {effectivePricing.originalLabel}/{effectivePricing.intervalLabel}
+              </div>
+            )}
+            <div className="text-xl font-bold text-white">
+              {effectivePricing.discountedLabel}
+              <span className="text-sm text-neutral-400 ml-1">/{effectivePricing.intervalLabel}</span>
+            </div>
+          </div>
         </div>
         {billingPeriod === 'yearly' && (
           <p className="text-xs text-neutral-500 mt-1">
             ${(parseFloat(plan.yearlyPrice.replace('$', '')) / 12).toFixed(2)}/month billed annually
           </p>
         )}
+        {pricingPreview?.discountAmount ? (
+          <p className="mt-2 text-sm text-[#4CAF50] flex items-center gap-2">
+            <Tag className="w-4 h-4" />
+            Discount applied ({pricingPreview.appliedPromoCode}): -{formatMoney(pricingPreview.discountAmount, pricingPreview.currency)}
+          </p>
+        ) : null}
       </div>
 
       {/* Promo Code */}
@@ -242,7 +366,9 @@ const CheckoutForm = ({ initialPeriod = 'monthly', onBillingPeriodChange }: Chec
             value={promoCode}
             onChange={(e) => {
               setPromoCode(e.target.value);
-              setAppliedPromoCode(null);
+              setPromoStatus('idle');
+              setPromoError('');
+              onPricingPreviewChange(null);
               if (error) setError('');
             }}
             placeholder="Enter code (e.g. IANTEST94)"
@@ -251,12 +377,23 @@ const CheckoutForm = ({ initialPeriod = 'monthly', onBillingPeriodChange }: Chec
             autoComplete="off"
             disabled={loading}
           />
+          <button
+            type="button"
+            onClick={handleApplyPromoCode}
+            disabled={loading || promoStatus === 'applying'}
+            className="px-5 py-3 rounded-xl bg-neutral-900 border border-neutral-800 text-white font-semibold hover:border-[#4CAF50]/50 hover:bg-neutral-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            aria-label="Apply promotion code"
+          >
+            {promoStatus === 'applying' ? 'Applying…' : 'Apply'}
+          </button>
         </div>
-        {appliedPromoCode && (
+        {promoError ? (
+          <p className="mt-2 text-sm text-red-400">{promoError}</p>
+        ) : promoStatus === 'applied' && pricingPreview ? (
           <p className="mt-2 text-sm text-[#4CAF50]">
-            Code applied: <span className="font-semibold">{appliedPromoCode}</span>
+            Code applied: <span className="font-semibold">{pricingPreview.appliedPromoCode}</span>
           </p>
-        )}
+        ) : null}
       </div>
 
       {/* Card Element */}
@@ -305,6 +442,7 @@ export default function Checkout() {
   const { user, loading: authLoading } = useAuth();
   const [currentBillingPeriod, setCurrentBillingPeriod] = useState<BillingPeriod>('monthly');
   const [initialPeriod, setInitialPeriod] = useState<BillingPeriod>('monthly');
+  const [pricingPreview, setPricingPreview] = useState<PricingPreview | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -317,6 +455,7 @@ export default function Checkout() {
       const period = router.query.period as BillingPeriod;
       setInitialPeriod(period);
       setCurrentBillingPeriod(period);
+      setPricingPreview(null);
     }
   }, [router.query]);
 
@@ -368,6 +507,8 @@ export default function Checkout() {
               <CheckoutForm 
                 initialPeriod={initialPeriod} 
                 onBillingPeriodChange={setCurrentBillingPeriod}
+                pricingPreview={pricingPreview}
+                onPricingPreviewChange={setPricingPreview}
               />
             </Elements>
           </div>
@@ -400,12 +541,24 @@ export default function Checkout() {
                 <div className="flex justify-between items-center mt-2">
                   <span className="text-neutral-400">Price</span>
                   <span className="text-xl font-bold text-[#4CAF50]">
-                    {currentBillingPeriod === 'monthly' ? plan.monthlyPrice : plan.yearlyPrice}
+                    {pricingPreview
+                      ? formatMoney(pricingPreview.unitAmountDiscounted, pricingPreview.currency)
+                      : currentBillingPeriod === 'monthly'
+                        ? plan.monthlyPrice
+                        : plan.yearlyPrice}
                     <span className="text-sm text-neutral-400 ml-1">
-                      /{currentBillingPeriod === 'monthly' ? 'month' : 'year'}
+                      /{pricingPreview ? pricingPreview.interval : (currentBillingPeriod === 'monthly' ? 'month' : 'year')}
                     </span>
                   </span>
                 </div>
+                {pricingPreview?.discountAmount ? (
+                  <div className="flex justify-between items-center mt-2">
+                    <span className="text-neutral-400">Discount</span>
+                    <span className="text-white font-semibold">
+                      -{formatMoney(pricingPreview.discountAmount, pricingPreview.currency)}
+                    </span>
+                  </div>
+                ) : null}
               </div>
             </div>
 
