@@ -115,25 +115,27 @@ const CheckoutForm = ({ initialPeriod = 'monthly', onBillingPeriodChange }: Chec
         throw new Error(errorData.message || 'Failed to create subscription');
       }
 
-      const { clientSecret, status } = await response.json();
+      const { clientSecret, status, requiresAction } = await response.json();
 
-      if (status === 'active') {
+      if (status === 'active' || status === 'trialing') {
         // Subscription is already active, redirect to success
-        router.push('/?success=true');
+        window.location.href = '/?success=true';
         return;
       }
 
-      // Confirm the payment intent
-      const { error: confirmError } = await stripe.confirmCardPayment(clientSecret, {
-        payment_method: paymentMethod.id,
-      });
+      // If payment requires action (3D Secure, etc.)
+      if (requiresAction && clientSecret) {
+        const { error: confirmError } = await stripe.confirmCardPayment(clientSecret, {
+          payment_method: paymentMethod.id,
+        });
 
-      if (confirmError) {
-        throw new Error(confirmError.message);
+        if (confirmError) {
+          throw new Error(confirmError.message);
+        }
       }
 
       // Redirect to success page
-      router.push('/?success=true');
+      window.location.href = '/?success=true';
     } catch (err: any) {
       console.error('Checkout error:', err);
       setError(err.message || 'An error occurred during checkout');

@@ -84,34 +84,45 @@ export default async function handler(
       },
     });
 
-    // Create subscription
+    // Create subscription with payment method already attached
+    // Since payment method is attached, Stripe will attempt to charge it immediately
     const subscription = await stripe.subscriptions.create({
       customer: stripeCustomerId,
       items: [{ price: priceId }],
-      payment_behavior: 'default_incomplete',
-      payment_settings: {
-        payment_method_types: ['card'],
-        save_default_payment_method: 'on_subscription',
-      },
+      default_payment_method: paymentMethodId,
       expand: ['latest_invoice.payment_intent'],
     });
 
     const invoice = subscription.latest_invoice as Stripe.Invoice;
     const paymentIntent = invoice?.payment_intent as Stripe.PaymentIntent;
 
-    if (!paymentIntent || paymentIntent.status !== 'requires_payment_method') {
-      // Subscription is active or needs action
+    // Check subscription and payment intent status
+    if (subscription.status === 'active' || subscription.status === 'trialing') {
+      // Subscription is already active - payment succeeded
       return res.status(200).json({
         subscriptionId: subscription.id,
-        clientSecret: paymentIntent?.client_secret,
+        clientSecret: null,
         status: subscription.status,
+        requiresAction: false,
       });
     }
 
+    // If payment intent requires action (3D Secure, etc.)
+    if (paymentIntent && (paymentIntent.status === 'requires_action' || paymentIntent.status === 'requires_payment_method')) {
+      return res.status(200).json({
+        subscriptionId: subscription.id,
+        clientSecret: paymentIntent.client_secret,
+        status: subscription.status,
+        requiresAction: true,
+      });
+    }
+
+    // Default response
     return res.status(200).json({
       subscriptionId: subscription.id,
-      clientSecret: paymentIntent.client_secret,
+      clientSecret: paymentIntent?.client_secret || null,
       status: subscription.status,
+      requiresAction: false,
     });
   } catch (error: any) {
     console.error(`[ERROR] Error creating subscription: ${error.message}\nStack: ${error.stack}`);
