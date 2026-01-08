@@ -6,12 +6,14 @@ import { db, storage } from '../../lib/firebase';
 import { AdminShell } from '../../components/admin/AdminShell';
 import {
   collection,
+  addDoc,
   getDocs,
   doc,
   deleteDoc,
   updateDoc,
   query,
   orderBy,
+  serverTimestamp,
   writeBatch
 } from 'firebase/firestore';
 import { ref, deleteObject } from 'firebase/storage';
@@ -67,6 +69,7 @@ const ManageGalleries: React.FC = () => {
   const [showDeleteSetModal, setShowDeleteSetModal] = useState(false);
   const [showEditGalleryModal, setShowEditGalleryModal] = useState(false);
   const [showEditSetModal, setShowEditSetModal] = useState(false);
+  const [showCreateGalleryModal, setShowCreateGalleryModal] = useState(false);
 
   // Selected items state
   const [selectedGallery, setSelectedGallery] = useState<Gallery | null>(null);
@@ -76,6 +79,10 @@ const ManageGalleries: React.FC = () => {
   const [editingGalleryName, setEditingGalleryName] = useState('');
   const [editingSetName, setEditingSetName] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // Create state
+  const [creatingGalleryName, setCreatingGalleryName] = useState('');
+  const [creatingGalleryStatus, setCreatingGalleryStatus] = useState<'draft' | 'published'>('draft');
 
   const adminUid = process.env.NEXT_PUBLIC_ADMIN_UID;
   if (!adminUid) {
@@ -379,6 +386,45 @@ const ManageGalleries: React.FC = () => {
     }
   };
 
+  const handleCreateGallery = async (e?: FormEvent) => {
+    if (e) e.preventDefault();
+    if (!creatingGalleryName.trim()) return;
+
+    try {
+      setIsProcessing(true);
+      setError('');
+
+      const galleriesRef = collection(db, 'users', adminUid, 'galleries');
+      const newDoc = await addDoc(galleriesRef, {
+        name: creatingGalleryName.trim(),
+        status: creatingGalleryStatus,
+        createdAt: serverTimestamp(),
+      });
+
+      setGalleries((prev) => [
+        {
+          id: newDoc.id,
+          name: creatingGalleryName.trim(),
+          setCount: 0,
+          status: creatingGalleryStatus,
+          createdAt: new Date(),
+          sets: [],
+        },
+        ...prev,
+      ]);
+
+      setShowCreateGalleryModal(false);
+      setCreatingGalleryName('');
+      setCreatingGalleryStatus('draft');
+      setExpandedGallery(newDoc.id);
+    } catch (err) {
+      console.error('Error creating gallery:', err);
+      setError('Failed to create gallery');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const handleEditGallery = async (gallery: Gallery) => {
     if (!editingGalleryName.trim()) return;
 
@@ -509,6 +555,17 @@ const ManageGalleries: React.FC = () => {
                 </p>
               </div>
               <div className="flex gap-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCreatingGalleryName('');
+                    setCreatingGalleryStatus('draft');
+                    setShowCreateGalleryModal(true);
+                  }}
+                  className="px-4 py-2 bg-[#4CAF50] text-white rounded-md hover:bg-[#45a049] transition-colors"
+                >
+                  New Gallery
+                </button>
                 <Link
                   href="/admin"
                   className="px-4 py-2 bg-white text-gray-700 rounded-md border border-gray-300 hover:bg-gray-50 transition-colors"
@@ -700,11 +757,92 @@ const ManageGalleries: React.FC = () => {
                   <p className="mt-1 text-sm text-gray-500">
                     Get started by creating a new gallery.
                   </p>
+                  <div className="mt-6">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCreatingGalleryName('');
+                        setCreatingGalleryStatus('draft');
+                        setShowCreateGalleryModal(true);
+                      }}
+                      className="inline-flex items-center justify-center px-4 py-2 bg-[#4CAF50] text-white rounded-md hover:bg-[#45a049] transition-colors"
+                    >
+                      New Gallery
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
           </div>
         </div>
+
+        {/* Create Gallery Modal */}
+        {showCreateGalleryModal && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Create gallery"
+          >
+            <div className="bg-white rounded-lg max-w-md w-full p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold text-gray-900">Create Gallery</h2>
+                <button
+                  onClick={() => setShowCreateGalleryModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                  aria-label="Close create gallery modal"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <form className="space-y-4" onSubmit={(e) => handleCreateGallery(e)}>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Gallery Name
+                  </label>
+                  <input
+                    type="text"
+                    value={creatingGalleryName}
+                    onChange={(e) => setCreatingGalleryName(e.target.value)}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#4CAF50] focus:ring-[#4CAF50]"
+                    placeholder="Enter gallery name"
+                    autoFocus
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Status
+                  </label>
+                  <select
+                    value={creatingGalleryStatus}
+                    onChange={(e) => setCreatingGalleryStatus(e.target.value as 'draft' | 'published')}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#4CAF50] focus:ring-[#4CAF50]"
+                  >
+                    <option value="draft">draft</option>
+                    <option value="published">published</option>
+                  </select>
+                </div>
+                <div className="flex justify-end gap-4 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateGalleryModal(false)}
+                    className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+                    disabled={isProcessing}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 text-white bg-[#4CAF50] rounded-md hover:bg-[#45a049] transition-colors disabled:opacity-50"
+                    disabled={isProcessing || !creatingGalleryName.trim()}
+                  >
+                    {isProcessing ? 'Creating...' : 'Create Gallery'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
 
         {/* Edit Gallery Modal */}
         {showEditGalleryModal && selectedGallery && (
