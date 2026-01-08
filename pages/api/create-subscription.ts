@@ -19,7 +19,7 @@ export default async function handler(
   }
 
   try {
-    const { userId, priceId, paymentMethodId, promoCode } = req.body;
+    const { userId, priceId, paymentMethodId, promoCode, customerName, customerEmail } = req.body;
 
     if (!userId || !priceId || !paymentMethodId) {
       return res.status(400).json({ message: 'Missing required parameters' });
@@ -62,7 +62,8 @@ export default async function handler(
         const userDoc = await adminDb.collection('users').doc(userId).get();
         const userData = userDoc.data();
         const customer = await stripe.customers.create({
-          email: userData?.email,
+          email: (typeof customerEmail === 'string' && customerEmail.trim() ? customerEmail.trim() : userData?.email) || undefined,
+          name: (typeof customerName === 'string' && customerName.trim() ? customerName.trim() : undefined),
           metadata: {
             firebaseUID: userId,
           },
@@ -70,6 +71,26 @@ export default async function handler(
         stripeCustomerId = customer.id;
         console.log(`[DEBUG] Created new Stripe customer: ${stripeCustomerId}`);
       }
+    }
+
+    // Ensure Stripe customer has firebaseUID metadata + latest name/email (without nuking existing metadata)
+    try {
+      const existingCustomer = await stripe.customers.retrieve(stripeCustomerId);
+      const existingMetadata =
+        typeof existingCustomer === 'object' && 'metadata' in existingCustomer ? existingCustomer.metadata : {};
+
+      await stripe.customers.update(stripeCustomerId, {
+        ...(typeof customerEmail === 'string' && customerEmail.trim()
+          ? { email: customerEmail.trim() }
+          : {}),
+        ...(typeof customerName === 'string' && customerName.trim() ? { name: customerName.trim() } : {}),
+        metadata: {
+          ...(existingMetadata ?? {}),
+          firebaseUID: userId,
+        },
+      });
+    } catch (custUpdateErr: any) {
+      console.warn(`[WARN] Failed to sync Stripe customer metadata/name/email: ${custUpdateErr.message}`);
     }
 
     // Attach payment method to customer

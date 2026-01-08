@@ -20,8 +20,8 @@ function SignUp() {
 
   useEffect(() => {
     if (user) {
-      console.log('User is authenticated, redirecting to subscription page');
-      router.push('/subscription');
+      console.log('User is authenticated, redirecting to checkout page');
+      window.location.href = '/checkout?period=monthly';
     }
   }, [user, router]);
 
@@ -74,7 +74,7 @@ function SignUp() {
       });
       console.log('Signup successful, attempting to redirect...');
       // Use window.location for more reliable redirect
-      window.location.href = '/subscription';
+      window.location.href = '/checkout?period=monthly';
     } catch (err: any) {
       console.error('Signup error:', err);
       setError(err.message || 'Failed to create an account');

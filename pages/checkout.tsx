@@ -204,6 +204,7 @@ const CheckoutForm = ({
         card: cardElement,
         billing_details: {
           email: user.email || undefined,
+          name: user.displayName || undefined,
         },
       });
 
@@ -228,6 +229,8 @@ const CheckoutForm = ({
           priceId,
           paymentMethodId: paymentMethod.id,
           promoCode: pricingPreview?.appliedPromoCode ?? (promoCode.trim() ? promoCode.trim() : null),
+          customerName: user.displayName || null,
+          customerEmail: user.email || null,
         }),
       });
 
