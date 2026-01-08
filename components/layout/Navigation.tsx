@@ -127,10 +127,16 @@ export default function Navigation() {
               </button>
             )}
             <button
-              onClick={() => router.push('/subscription-details')}
+              onClick={() => {
+                const status = subscription?.status ?? null;
+                const hasAccess = status === 'active' || status === 'trialing';
+                router.push(hasAccess ? '/subscription-details' : '/checkout?period=monthly');
+              }}
               className="px-4 py-2 text-white hover:text-[#4CAF50] transition-colors duration-200 text-lg font-semibold flex items-center"
             >
-              Subscription
+              {subscription?.status === 'active' || subscription?.status === 'trialing'
+                ? 'Subscription'
+                : 'Checkout'}
               {subscription?.status === 'active' && (
                 <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-[#4CAF50] text-black">
                   Active

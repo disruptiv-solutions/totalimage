@@ -36,7 +36,7 @@ export default function ProtectedRoute({
       }
 
       if (requireSubscription && !hasActiveSubscription && !isAdmin) {
-        router.push('/subscription');
+        router.push('/checkout?period=monthly');
         return;
       }
     }

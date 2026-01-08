@@ -489,11 +489,11 @@ export default function Checkout() {
     <div className="min-h-screen bg-black">
       <div className="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
         <Link
-          href="/subscription"
+          href="/"
           className="inline-flex items-center text-neutral-400 hover:text-white mb-8 transition-colors"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to subscription
+          Back
         </Link>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

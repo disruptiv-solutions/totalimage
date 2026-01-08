@@ -59,6 +59,14 @@ export default function Subscription() {
 
   // Handle canceled checkout redirect
   useEffect(() => {
+    // This app now uses /checkout as the subscription purchase flow.
+    // Keep /subscription for backwards compatibility, but send users to checkout.
+    if (router.isReady && user) {
+      const period = router.query.period === 'yearly' ? 'yearly' : 'monthly';
+      window.location.replace(`/checkout?period=${period}`);
+      return;
+    }
+
     if (router.query.canceled === 'true') {
       setCanceled(true);
       // Remove query params from URL

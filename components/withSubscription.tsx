@@ -17,7 +17,7 @@ export function withSubscription<P extends object>(
         if (!user) {
           router.replace('/signin');
         } else if (!hasAccess) {
-          router.replace('/subscription');
+          router.replace('/checkout?period=monthly');
         }
       }
     }, [user, hasAccess, authLoading, subscriptionLoading]);
