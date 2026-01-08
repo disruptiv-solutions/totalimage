@@ -6,8 +6,8 @@ export default function Document() {
       <Head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
         
-        {/* Favicon */}
-        <link rel="icon" type="image/x-icon" href="/favicon/favicon.ico" />
+        {/* Favicon - Primary */}
+        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16x16.png" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32x32.png" />
         
@@ -20,6 +20,9 @@ export default function Document() {
         
         {/* Web Manifest */}
         <link rel="manifest" href="/favicon/site.webmanifest" />
+        
+        {/* Additional favicon links for better browser support */}
+        <link rel="shortcut icon" href="/favicon.ico" />
         
         {/* Theme Color */}
         <meta name="theme-color" content="#000000" />
