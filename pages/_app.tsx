@@ -25,6 +25,7 @@ const routes = {
   // Auth required but no subscription needed
   authOnly: [
     '/subscription',
+    '/checkout',
     '/profile',
     '/settings'
   ],

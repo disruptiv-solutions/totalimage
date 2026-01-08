@@ -43,7 +43,7 @@ function Home() {
 
   // Handle successful checkout redirect
   useEffect(() => {
-    if (router.query.success === 'true' && router.query.session_id) {
+    if (router.query.success === 'true') {
       setShowSuccess(true);
       // Remove query params from URL after showing success message
       router.replace('/', undefined, { shallow: true });
