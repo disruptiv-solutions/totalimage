@@ -81,23 +81,19 @@ export default function Subscription() {
       setLoading(true);
       setError('');
 
+      // Get customer (this ensures customer exists in Stripe)
       const customerResponse = await fetch(`/api/get-customer?userId=${user.uid}`);
-      let customerId;
-
       if (!customerResponse.ok) {
         console.log('Creating new Stripe customer...');
-        customerId = await createStripeCustomer(user.uid, user.email);
-      } else {
-        const customerData = await customerResponse.json();
-        customerId = customerData.customerId;
+        await createStripeCustomer(user.uid, user.email);
       }
 
       // Redirect to checkout page with billing period
-      router.push(`/checkout?period=${billingPeriod}`);
+      // Use window.location for more reliable redirect
+      window.location.href = `/checkout?period=${billingPeriod}`;
     } catch (err: any) {
       console.error('Subscription error:', err);
-      setError('Failed to start subscription process. Please try again.');
-    } finally {
+      setError(err.message || 'Failed to start subscription process. Please try again.');
       setLoading(false);
     }
   };
