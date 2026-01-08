@@ -35,9 +35,10 @@ type BillingPeriod = 'monthly' | 'yearly';
 
 interface CheckoutFormProps {
   initialPeriod?: BillingPeriod;
+  onBillingPeriodChange?: (period: BillingPeriod) => void;
 }
 
-const CheckoutForm = ({ initialPeriod = 'monthly' }: CheckoutFormProps) => {
+const CheckoutForm = ({ initialPeriod = 'monthly', onBillingPeriodChange }: CheckoutFormProps) => {
   const stripe = useStripe();
   const elements = useElements();
   const router = useRouter();
@@ -49,6 +50,11 @@ const CheckoutForm = ({ initialPeriod = 'monthly' }: CheckoutFormProps) => {
   useEffect(() => {
     setBillingPeriod(initialPeriod);
   }, [initialPeriod]);
+
+  const handleBillingPeriodChange = (period: BillingPeriod) => {
+    setBillingPeriod(period);
+    onBillingPeriodChange?.(period);
+  };
 
   // Calculate yearly savings
   const monthlyTotal = 3.99 * 12;
@@ -164,7 +170,7 @@ const CheckoutForm = ({ initialPeriod = 'monthly' }: CheckoutFormProps) => {
         <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-1 flex gap-2">
           <button
             type="button"
-            onClick={() => setBillingPeriod('monthly')}
+            onClick={() => handleBillingPeriodChange('monthly')}
             className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all duration-200 ${
               billingPeriod === 'monthly'
                 ? 'bg-[#4CAF50] text-white'
@@ -175,7 +181,7 @@ const CheckoutForm = ({ initialPeriod = 'monthly' }: CheckoutFormProps) => {
           </button>
           <button
             type="button"
-            onClick={() => setBillingPeriod('yearly')}
+            onClick={() => handleBillingPeriodChange('yearly')}
             className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all duration-200 relative ${
               billingPeriod === 'yearly'
                 ? 'bg-[#4CAF50] text-white'
@@ -259,12 +265,22 @@ const CheckoutForm = ({ initialPeriod = 'monthly' }: CheckoutFormProps) => {
 export default function Checkout() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
+  const [currentBillingPeriod, setCurrentBillingPeriod] = useState<BillingPeriod>('monthly');
+  const [initialPeriod, setInitialPeriod] = useState<BillingPeriod>('monthly');
 
   useEffect(() => {
     if (!authLoading && !user) {
       router.push('/signup');
     }
   }, [user, authLoading, router]);
+
+  useEffect(() => {
+    if (router.query.period === 'yearly' || router.query.period === 'monthly') {
+      const period = router.query.period as BillingPeriod;
+      setInitialPeriod(period);
+      setCurrentBillingPeriod(period);
+    }
+  }, [router.query]);
 
   if (authLoading) {
     return (
@@ -311,7 +327,10 @@ export default function Checkout() {
             </p>
 
             <Elements stripe={stripePromise}>
-              <CheckoutForm initialPeriod={initialPeriod} />
+              <CheckoutForm 
+                initialPeriod={initialPeriod} 
+                onBillingPeriodChange={setCurrentBillingPeriod}
+              />
             </Elements>
           </div>
 
@@ -336,8 +355,17 @@ export default function Checkout() {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-neutral-400">Billing</span>
-                  <span className="text-white font-semibold" id="billing-display">
-                    Monthly
+                  <span className="text-white font-semibold">
+                    {currentBillingPeriod === 'monthly' ? 'Monthly' : 'Yearly'}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center mt-2">
+                  <span className="text-neutral-400">Price</span>
+                  <span className="text-xl font-bold text-[#4CAF50]">
+                    {currentBillingPeriod === 'monthly' ? plan.monthlyPrice : plan.yearlyPrice}
+                    <span className="text-sm text-neutral-400 ml-1">
+                      /{currentBillingPeriod === 'monthly' ? 'month' : 'year'}
+                    </span>
                   </span>
                 </div>
               </div>
