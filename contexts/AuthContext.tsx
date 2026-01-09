@@ -6,6 +6,7 @@ import {
   signOut,
   onAuthStateChanged,
   sendPasswordResetEmail,
+  deleteUser,
   User,
   updateProfile
 } from 'firebase/auth';
@@ -145,7 +146,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         updatedAt: timestamp
       };
 
-      await setDoc(doc(db, 'users', user.uid), userProfile);
+      try {
+        await setDoc(doc(db, 'users', user.uid), userProfile);
+      } catch (profileErr: any) {
+        console.error(
+          'Failed to create Firestore user profile. This usually means Firestore rules or the Firebase project config is wrong.',
+          { code: profileErr?.code, message: profileErr?.message }
+        );
+
+        // Roll back the just-created Auth user so we don't end up with "Auth user exists but no Firestore profile"
+        try {
+          await deleteUser(user);
+        } catch (rollbackErr: any) {
+          console.error('Rollback failed: could not delete Auth user after profile creation failure', {
+            code: rollbackErr?.code,
+            message: rollbackErr?.message,
+          });
+        }
+
+        throw new Error(
+          profileErr?.code === 'permission-denied'
+            ? 'Account created, but Firestore blocked saving your profile (permission-denied). Please check Firestore rules for users/{uid}.'
+            : 'Account created, but we could not save your profile. Please try again.'
+        );
+      }
 
       setUser(user);
       return user;

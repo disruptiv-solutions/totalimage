@@ -5,7 +5,7 @@ import { Lock, Mail, User, AtSign, Loader, ShieldCheck } from 'lucide-react';
 
 function SignUp() {
   const router = useRouter();
-  const { signup, user } = useAuth();
+  const { signup, user, getUserProfile } = useAuth();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [username, setUsername] = useState('');
@@ -19,11 +19,20 @@ function SignUp() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (user) {
-      console.log('User is authenticated, redirecting to checkout page');
+    const run = async () => {
+      // If a user is already logged in and already has a profile doc, send them to checkout.
+      // IMPORTANT: we intentionally do NOT redirect just because `user` exists; otherwise we can
+      // mask Firestore failures where the Auth user exists but `users/{uid}` was never created.
+      if (!user) return;
+
+      const profile = await getUserProfile(user.uid);
+      if (!profile) return;
+
       window.location.href = '/checkout?period=monthly';
-    }
-  }, [user, router]);
+    };
+
+    run();
+  }, [user, getUserProfile]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,7 +82,6 @@ function SignUp() {
         termsAcceptedAt: new Date().toISOString()
       });
       console.log('Signup successful, attempting to redirect...');
-      // Use window.location for more reliable redirect
       window.location.href = '/checkout?period=monthly';
     } catch (err: any) {
       console.error('Signup error:', err);
