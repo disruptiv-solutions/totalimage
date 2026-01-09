@@ -61,12 +61,30 @@ interface ImageData {
     source?: string;
     createdAt?: string;
     seed?: number;
+    referenceImages?: string[];
   };
   path?: string;
   contentType?: string;
   size?: number;
   createdAt?: number;
 }
+
+type UploadedImageCategory = 'style' | 'brand' | 'character' | 'product' | 'other';
+
+type UploadedImageItem = {
+  id: string;
+  url: string;
+  name?: string;
+  type?: string;
+  size?: number;
+  path?: string;
+  uploadedAt?: string;
+  galleryId: string;
+  galleryName?: string;
+  setId: string;
+  setName?: string;
+  category: UploadedImageCategory;
+};
 
 const GeneratePage: React.FC = () => {
   const { user } = useAuth() as { user: User | null };
@@ -113,6 +131,16 @@ const GeneratePage: React.FC = () => {
   const [modelsLoading, setModelsLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [generatedImages, setGeneratedImages] = useState<ImageData[]>([]);
+
+  // Reference images (brand/style/character/product) - up to 14 images sent with the prompt
+  const [referenceImageUrls, setReferenceImageUrls] = useState<string[]>([]);
+  const [referencePickerOpen, setReferencePickerOpen] = useState(false);
+  const [uploadedImages, setUploadedImages] = useState<UploadedImageItem[]>([]);
+  const [uploadedImagesLoading, setUploadedImagesLoading] = useState(false);
+  const [uploadedImagesError, setUploadedImagesError] = useState('');
+  const [uploadedImagesCategory, setUploadedImagesCategory] = useState<UploadedImageCategory | 'all'>('all');
+  const [uploadedImagesSearch, setUploadedImagesSearch] = useState('');
+
   // Lightbox (after images state exists)
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
@@ -167,6 +195,57 @@ const GeneratePage: React.FC = () => {
 
   const handleToggleDrawer = () => {
     setDrawerOpen(!drawerOpen);
+  };
+
+  const handleOpenReferencePicker = async () => {
+    if (referencePickerOpen) return;
+    setUploadedImagesError('');
+    setReferencePickerOpen(true);
+
+    if (uploadedImages.length > 0) return;
+    try {
+      setUploadedImagesLoading(true);
+      const token = await (user as any)?.getIdToken?.();
+      if (!token) {
+        setUploadedImagesError('You must be signed in to load uploaded images.');
+        return;
+      }
+
+      const resp = await fetch('/api/uploaded-images', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok) {
+        throw new Error(data?.error || 'Failed to load uploaded images');
+      }
+
+      const images = Array.isArray(data?.images) ? (data.images as UploadedImageItem[]) : [];
+      setUploadedImages(images);
+    } catch (e: any) {
+      setUploadedImagesError(e?.message || 'Failed to load uploaded images');
+    } finally {
+      setUploadedImagesLoading(false);
+    }
+  };
+
+  const handleToggleReferenceImage = (url: string) => {
+    if (!url) return;
+
+    setReferenceImageUrls((prev) => {
+      if (prev.includes(url)) {
+        return prev.filter((x) => x !== url);
+      }
+      if (prev.length >= 14) {
+        setUploadedImagesError('You can only select up to 14 reference images.');
+        return prev;
+      }
+      return [...prev, url];
+    });
+  };
+
+  const handleRemoveReferenceImage = (url: string) => {
+    if (!url) return;
+    setReferenceImageUrls((prev) => prev.filter((x) => x !== url));
   };
   const handleToggleSessions = async () => {
     const next = !showSessions;
@@ -837,6 +916,7 @@ const GeneratePage: React.FC = () => {
       setError('');
       setCancelFeedback('');
       setLastPromptId(null);
+      const normalizedReferenceImages = referenceImageUrls.slice(0, 14);
 
       // Create an abort controller for this generation
       generationAbortController.current = new AbortController();
@@ -888,6 +968,7 @@ const GeneratePage: React.FC = () => {
           signal: generationAbortController.current.signal,
         body: JSON.stringify({
           prompt: prompt, // User's actual prompt from textarea
+          referenceImages: normalizedReferenceImages,
           settings: {
               ...settingsWithoutPrompt, // Include all model-specific inputs EXCEPT prompt and loras
               loras: enabledLoras, // Send the full LoRA configurations
@@ -948,10 +1029,11 @@ const GeneratePage: React.FC = () => {
                     imageData: imageUrl,
                     metadata: {
                       prompt,
-                      settings: { ...modelInputs, seed: imageSeed },
+                      settings: { ...modelInputs, seed: imageSeed, referenceImages: normalizedReferenceImages },
                       loras: enabledLoras,
                       source: 'comfyui',
                       seed: imageSeed, // Explicitly store the seed used for this generation
+                      referenceImages: normalizedReferenceImages,
                       createdAt: new Date().toISOString(),
                     },
                   }),
@@ -981,10 +1063,11 @@ const GeneratePage: React.FC = () => {
               downloadUrl: img.url,
               metadata: {
                 prompt,
-                settings: { ...modelInputs, seed: img.seed },
+                settings: { ...modelInputs, seed: img.seed, referenceImages: normalizedReferenceImages },
                 loras: enabledLoras,
                 source: 'comfyui',
                 seed: img.seed,
+                referenceImages: normalizedReferenceImages,
                 createdAt: new Date().toISOString(),
               },
             }));
@@ -1820,8 +1903,19 @@ const GeneratePage: React.FC = () => {
                       <div className="flex items-center gap-2">
                         {!chatMode && (
                           <>
-                            <button type="button" className="p-2 rounded-full border hover:bg-gray-50" title="Add">
+                            <button
+                              type="button"
+                              onClick={handleOpenReferencePicker}
+                              className="relative p-2 rounded-full border hover:bg-gray-50"
+                              title="Reference images"
+                              aria-label="Select reference images"
+                            >
                               <Plus className="h-4 w-4" />
+                              {referenceImageUrls.length > 0 && (
+                                <span className="absolute -top-2 -right-2 text-[10px] leading-none bg-[#4CAF50] text-white rounded-full px-1.5 py-1">
+                                  {referenceImageUrls.length}
+                                </span>
+                              )}
                             </button>
                             <button type="button" className="p-2 rounded-full border hover:bg-gray-50" title="Voice">
                               <Mic className="h-4 w-4" />
@@ -1853,6 +1947,39 @@ const GeneratePage: React.FC = () => {
                       </div>
                     </div>
                   </div>
+
+                  {referenceImageUrls.length > 0 && (
+                    <div className="px-3 pb-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="text-xs text-gray-600">
+                          Reference images: {referenceImageUrls.length}/14
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setReferenceImageUrls([])}
+                          className="text-xs text-red-600 hover:text-red-800"
+                        >
+                          Clear
+                        </button>
+                      </div>
+                      <div className="flex gap-2 overflow-x-auto pb-1">
+                        {referenceImageUrls.map((url) => (
+                          <div key={url} className="relative w-14 h-14 flex-shrink-0">
+                            <img src={url} alt="Reference" className="w-full h-full rounded-lg object-cover border" />
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveReferenceImage(url)}
+                              className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-black/80 text-white flex items-center justify-center"
+                              aria-label="Remove reference image"
+                              title="Remove"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
 
                   {/* Error Display */}
@@ -2063,6 +2190,136 @@ const GeneratePage: React.FC = () => {
               alt="Full size"
               className="max-w-[95vw] max-h-[90vh] object-contain"
             />
+          </div>
+        )}
+
+        {referencePickerOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+            <div className="w-full max-w-5xl bg-white rounded-2xl shadow-xl overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-4 border-b">
+                <div>
+                  <div className="text-lg font-semibold text-gray-900">Reference images</div>
+                  <div className="text-xs text-gray-500">Select up to 14 images to include with the prompt</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setReferencePickerOpen(false)}
+                  className="p-2 rounded-lg hover:bg-gray-100"
+                  aria-label="Close reference image picker"
+                  title="Close"
+                >
+                  <X className="h-5 w-5 text-gray-700" />
+                </button>
+              </div>
+
+              <div className="px-5 py-4 border-b">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {(['all', 'style', 'brand', 'character', 'product', 'other'] as const).map((c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => setUploadedImagesCategory(c)}
+                        className={`px-3 py-1.5 rounded-full text-xs border transition-colors ${
+                          uploadedImagesCategory === c
+                            ? 'bg-[#4CAF50] text-white border-[#4CAF50]'
+                            : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                        }`}
+                        aria-label={`Filter ${c}`}
+                      >
+                        {c === 'all' ? 'All' : c.charAt(0).toUpperCase() + c.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <div className="text-xs text-gray-600 whitespace-nowrap">
+                      Selected: <span className="font-semibold">{referenceImageUrls.length}</span>/14
+                    </div>
+                    <input
+                      value={uploadedImagesSearch}
+                      onChange={(e) => setUploadedImagesSearch(e.target.value)}
+                      className="w-full sm:w-72 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4CAF50]"
+                      placeholder="Search by name / gallery / set…"
+                      aria-label="Search uploaded images"
+                    />
+                  </div>
+                </div>
+
+                {uploadedImagesError && (
+                  <div className="mt-3 text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                    {uploadedImagesError}
+                  </div>
+                )}
+              </div>
+
+              <div className="p-5">
+                {uploadedImagesLoading ? (
+                  <div className="text-sm text-gray-600">Loading uploaded images…</div>
+                ) : uploadedImages.length === 0 ? (
+                  <div className="text-sm text-gray-600">
+                    No uploaded images found yet. Upload reference images first (style / brand / character / product).
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 max-h-[60vh] overflow-y-auto pr-1">
+                    {uploadedImages
+                      .filter((img) => {
+                        if (uploadedImagesCategory !== 'all' && img.category !== uploadedImagesCategory) return false;
+                        const q = uploadedImagesSearch.trim().toLowerCase();
+                        if (!q) return true;
+                        const hay = `${img.name || ''} ${img.galleryName || ''} ${img.setName || ''}`.toLowerCase();
+                        return hay.includes(q);
+                      })
+                      .map((img) => {
+                        const selected = referenceImageUrls.includes(img.url);
+                        return (
+                          <button
+                            key={`${img.galleryId}-${img.setId}-${img.id}`}
+                            type="button"
+                            onClick={() => handleToggleReferenceImage(img.url)}
+                            className={`group relative aspect-square rounded-xl overflow-hidden border text-left ${
+                              selected ? 'border-[#4CAF50] ring-2 ring-[#4CAF50]' : 'border-gray-200 hover:border-gray-300'
+                            }`}
+                            aria-label={selected ? 'Deselect reference image' : 'Select reference image'}
+                            title={img.name || 'Reference image'}
+                          >
+                            <img src={img.url} alt={img.name || 'Uploaded image'} className="w-full h-full object-cover" />
+                            <div className="absolute inset-x-0 bottom-0 bg-black/60 text-white text-[10px] px-2 py-1 line-clamp-2">
+                              {img.galleryName || 'Gallery'} / {img.setName || 'Set'}
+                            </div>
+                            <div
+                              className={`absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold ${
+                                selected ? 'bg-[#4CAF50] text-white' : 'bg-black/50 text-white opacity-0 group-hover:opacity-100'
+                              }`}
+                            >
+                              {selected ? '✓' : '+'}
+                            </div>
+                          </button>
+                        );
+                      })}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center justify-between px-5 py-4 border-t bg-gray-50">
+                <button
+                  type="button"
+                  onClick={() => setReferenceImageUrls([])}
+                  className="text-sm text-red-700 hover:text-red-900"
+                >
+                  Clear selected
+                </button>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setReferencePickerOpen(false)}
+                    className="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-white"
+                  >
+                    Done
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 

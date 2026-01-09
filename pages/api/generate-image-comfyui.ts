@@ -15,6 +15,7 @@ type GenSettings = {
   steps?: number;
   seed?: number;
   loras?: string | LoRAConfig[]; // Support both old format and new LoRA array
+  referenceImages?: string[];
 };
 
 function num(n: any, fallback: number) {
@@ -34,10 +35,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const { prompt, settings } = req.body as { prompt?: string; settings?: GenSettings };
+    const { prompt, settings, referenceImages } = req.body as {
+      prompt?: string;
+      settings?: GenSettings;
+      referenceImages?: string[];
+    };
 
     if (!prompt || typeof prompt !== 'string' || !prompt.trim()) {
       return res.status(400).json({ error: 'Prompt is required' });
+    }
+
+    const normalizedReferenceImages = Array.isArray(referenceImages)
+      ? referenceImages.filter((x) => typeof x === 'string' && x.trim()).slice(0, 14)
+      : Array.isArray(settings?.referenceImages)
+        ? settings.referenceImages.filter((x) => typeof x === 'string' && x.trim()).slice(0, 14)
+        : [];
+
+    if (normalizedReferenceImages.length > 0) {
+      console.log(
+        `[ComfyUI API] Received ${normalizedReferenceImages.length} reference images (brand/style refs).`
+      );
     }
 
     // Normalize COMFYUI_URL (remove trailing slashes and accidental duplicates)
