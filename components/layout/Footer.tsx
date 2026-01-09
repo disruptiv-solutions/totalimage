@@ -39,6 +39,20 @@ const Footer = () => {
             </button>
           </div>
         </div>
+
+        <div className="mt-4 pt-4 border-t border-neutral-800 flex items-center justify-center">
+          <div className="text-neutral-500 text-sm">
+            Powered by{' '}
+            <button
+              type="button"
+              onClick={() => router.push('/')}
+              className="text-[#4CAF50] hover:text-[#45a049] underline underline-offset-4 transition-colors duration-200"
+              aria-label="Powered by LaunchBox - go to home page"
+            >
+              LaunchBox
+            </button>
+          </div>
+        </div>
       </div>
     </footer>
   );
