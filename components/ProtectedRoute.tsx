@@ -22,6 +22,8 @@ export default function ProtectedRoute({
   const { user, loading: authLoading } = useAuth();
   const { hasActiveSubscription, isAdmin, loading: subscriptionLoading } = useSubscriptionStatus();
   const router = useRouter();
+  const isCheckoutSuccessBypass =
+    router.pathname === '/' && router.query.success === 'true';
 
   useEffect(() => {
     if (!authLoading && !subscriptionLoading) {
@@ -35,7 +37,7 @@ export default function ProtectedRoute({
         return;
       }
 
-      if (requireSubscription && !hasActiveSubscription && !isAdmin) {
+      if (requireSubscription && !hasActiveSubscription && !isAdmin && !isCheckoutSuccessBypass) {
         router.push('/checkout?period=monthly');
         return;
       }
@@ -49,7 +51,8 @@ export default function ProtectedRoute({
     router, 
     requireAdmin, 
     requireSubscription, 
-    fallbackPath
+    fallbackPath,
+    isCheckoutSuccessBypass
   ]);
 
   if (authLoading || subscriptionLoading) {
@@ -61,7 +64,7 @@ export default function ProtectedRoute({
   }
 
   // Allow access for admins or users with valid subscriptions
-  if (!user || (!isAdmin && requireSubscription && !hasActiveSubscription)) {
+  if (!user || (!isAdmin && requireSubscription && !hasActiveSubscription && !isCheckoutSuccessBypass)) {
     return null;
   }
 
