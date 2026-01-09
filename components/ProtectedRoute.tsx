@@ -1,7 +1,7 @@
 
 
 // components/ProtectedRoute.tsx
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '../contexts/AuthContext';
 import { useSubscriptionStatus } from '../hooks/useSubscriptionStatus';
@@ -22,8 +22,17 @@ export default function ProtectedRoute({
   const { user, loading: authLoading } = useAuth();
   const { hasActiveSubscription, isAdmin, loading: subscriptionLoading } = useSubscriptionStatus();
   const router = useRouter();
+
+  const hasRecentCheckoutSuccess = useMemo(() => {
+    if (typeof window === 'undefined') return false;
+    const raw = window.sessionStorage.getItem('checkout_success_ts');
+    const ts = raw ? Number(raw) : 0;
+    if (!ts || Number.isNaN(ts)) return false;
+    return Date.now() - ts < 60_000;
+  }, [router.asPath]);
+
   const isCheckoutSuccessBypass =
-    router.pathname === '/' && router.query.success === 'true';
+    router.pathname === '/' && (router.query.success === 'true' || hasRecentCheckoutSuccess);
 
   useEffect(() => {
     if (!authLoading && !subscriptionLoading) {
@@ -40,6 +49,10 @@ export default function ProtectedRoute({
       if (requireSubscription && !hasActiveSubscription && !isAdmin && !isCheckoutSuccessBypass) {
         router.push('/checkout?period=monthly');
         return;
+      }
+
+      if (hasActiveSubscription && typeof window !== 'undefined') {
+        window.sessionStorage.removeItem('checkout_success_ts');
       }
     }
   }, [

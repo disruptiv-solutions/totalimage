@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '../contexts/AuthContext';
 import { loadStripe } from '@stripe/stripe-js';
@@ -79,6 +79,7 @@ const CheckoutForm = ({
   const [promoError, setPromoError] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const hasSubmittedRef = useRef(false);
 
   useEffect(() => {
     setBillingPeriod(initialPeriod);
@@ -185,12 +186,17 @@ const CheckoutForm = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (hasSubmittedRef.current || loading) {
+      return;
+    }
+
     if (!stripe || !elements || !user) {
       return;
     }
 
     setLoading(true);
     setError('');
+    hasSubmittedRef.current = true;
 
     try {
       const cardElement = elements.getElement(CardElement);
@@ -243,6 +249,9 @@ const CheckoutForm = ({
 
       if (status === 'active' || status === 'trialing') {
         // Subscription is already active, redirect to success
+        if (typeof window !== 'undefined') {
+          window.sessionStorage.setItem('checkout_success_ts', String(Date.now()));
+        }
         window.location.href = '/?success=true';
         return;
       }
@@ -259,12 +268,16 @@ const CheckoutForm = ({
       }
 
       // Redirect to success page
+      if (typeof window !== 'undefined') {
+        window.sessionStorage.setItem('checkout_success_ts', String(Date.now()));
+      }
       window.location.href = '/?success=true';
     } catch (err: any) {
       console.error('Checkout error:', err);
       setError(err.message || 'An error occurred during checkout');
     } finally {
       setLoading(false);
+      hasSubmittedRef.current = false;
     }
   };
 
