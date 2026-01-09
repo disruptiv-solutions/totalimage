@@ -138,7 +138,7 @@ function MyApp({ Component, pageProps }: AppProps) {
             >
               {getPageContent()}
             </main>
-            {!isAdminRoute && <Footer />}
+            {/* Footer removed on global layout; pages can render their own footer */}
           </div>
         </SubscriptionProvider>
       </AuthProvider>
