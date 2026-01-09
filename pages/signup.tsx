@@ -70,6 +70,7 @@ function SignUp() {
 
     try {
       console.log('Starting signup process...');
+      console.log('Firebase projectId (client):', process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID);
       setError('');
       setLoading(true);
       await signup(email, password, {

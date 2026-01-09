@@ -148,6 +148,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       try {
         await setDoc(doc(db, 'users', user.uid), userProfile);
+
+        // Immediately read-back to confirm the write actually landed in Firestore.
+        // If this fails or returns missing, something is wrong (rules, project mismatch, etc.)
+        const writtenDoc = await getDoc(doc(db, 'users', user.uid));
+        if (!writtenDoc.exists()) {
+          throw new Error(
+            `User profile write did not persist. Check you are viewing the correct Firebase project and that Firestore rules allow users/${user.uid} writes.`
+          );
+        }
       } catch (profileErr: any) {
         console.error(
           'Failed to create Firestore user profile. This usually means Firestore rules or the Firebase project config is wrong.',
